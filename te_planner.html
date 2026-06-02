@@ -1474,7 +1474,9 @@ window.addEventListener('keydown',function(e){
     var span=Math.round(diffW(pd(nt.start),pd(nt.end)));
     if(span<1)span=1;
     if(_lastMouseWi!==null){
-      console.log('paste wi='+_lastMouseWi);
+      var _tw=document.getElementById('tlwrap');
+      var _wr=_tw.getBoundingClientRect();
+      console.log('wi='+_lastMouseWi+' scrollLeft='+_tw.scrollLeft+' scrollWidth='+_tw.scrollWidth+' clientWidth='+_tw.clientWidth+' WW='+WW()+' sc='+Math.round((_tw.scrollWidth-_tw.clientWidth-_tw.scrollLeft)/WW()));
       nt.start=fd(wkDate(_lastMouseWi));
       nt.end=fd(addW(pd(nt.start),span));
     }
