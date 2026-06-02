@@ -1293,7 +1293,7 @@ function om(id){document.getElementById(id).classList.add('open');}
 function buildColors(cid,sel,nullable,baseColor){
   var c=document.getElementById(cid);c.innerHTML='';
   if(nullable){var none=document.createElement('div');none.className='copt'+((!sel)?' on':'');none.style.cssText='background:var(--bg);border-color:#ccc;';none.dataset.none='1';none.onclick=function(){c.querySelectorAll('.copt').forEach(function(x){x.classList.remove('on');});none.classList.add('on');};c.appendChild(none);}
-  var palette=baseColor?generateShades(baseColor,12):COLS;
+  var palette=baseColor?groupShades(baseColor):COLS;
   palette.forEach(function(col){var sw=document.createElement('div');sw.className='copt'+(col===sel?' on':'');sw.style.background=col;sw.onclick=function(){c.querySelectorAll('.copt').forEach(function(x){x.classList.remove('on');});sw.classList.add('on');};c.appendChild(sw);});
 }
 
@@ -1604,4 +1604,13 @@ function goBackHome(){
 
 </script>
 </body>
-</html>
+</html
+function groupShades(base){
+  if(!base)return COLS;
+  var shades=[];
+  [0.6,0.45,0.3,0.15,0,-0.15,-0.3,-0.45].forEach(function(amt){
+    shades.push(amt>0?lighten(base,amt):amt===0?base:darken(base,Math.abs(amt)));
+  });
+  return shades;
+}
+>
