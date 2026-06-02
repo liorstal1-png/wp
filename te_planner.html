@@ -1176,8 +1176,9 @@ document.addEventListener('mousemove',function(e){
   var tlwrap=document.getElementById('tlwrap');
   if(!tlwrap)return;
   var wr=tlwrap.getBoundingClientRect();
-  var sc=Math.round((tlwrap.scrollWidth-tlwrap.clientWidth-tlwrap.scrollLeft)/WW());
-  var wi=Math.floor((wr.right-e.clientX)/WW())+sc;
+  // exact pixel position relative to content start
+  var pixelsFromRight=(wr.right-e.clientX)+(tlwrap.scrollWidth-tlwrap.clientWidth-tlwrap.scrollLeft);
+  var wi=Math.floor(pixelsFromRight/WW());
   _lastMouseWi=Math.max(0,Math.min(TL_WEEKS-1,wi));
 },{passive:true});
 
