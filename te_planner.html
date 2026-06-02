@@ -1176,9 +1176,8 @@ document.addEventListener('mousemove',function(e){
   var tlwrap=document.getElementById('tlwrap');
   if(!tlwrap)return;
   var wr=tlwrap.getBoundingClientRect();
-  // exact pixel position relative to content start
-  var pixelsFromRight=(wr.right-e.clientX)+(tlwrap.scrollWidth-tlwrap.clientWidth-tlwrap.scrollLeft);
-  var wi=Math.floor(pixelsFromRight/WW());
+  var sc=Math.round((tlwrap.scrollWidth-tlwrap.clientWidth-tlwrap.scrollLeft)/WW());
+  var wi=Math.floor((wr.right-e.clientX)/WW())+sc;
   _lastMouseWi=Math.max(0,Math.min(TL_WEEKS-1,wi));
 },{passive:true});
 
@@ -1473,6 +1472,7 @@ window.addEventListener('keydown',function(e){
     var span=Math.round(diffW(pd(nt.start),pd(nt.end)));
     if(span<1)span=1;
     if(_lastMouseWi!==null){
+      console.log('paste wi='+_lastMouseWi+' wkDate='+fd(wkDate(_lastMouseWi)));
       nt.start=fd(wkDate(_lastMouseWi));
       nt.end=fd(addW(pd(nt.start),span));
     }
