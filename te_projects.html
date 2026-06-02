@@ -194,7 +194,9 @@ function openProject(id){
   } else {
     sessionStorage.removeItem('te_active');
   }
-  window.location.href='te_planner.html';
+  // use relative path - works locally and on GitHub Pages
+  var base=window.location.href.replace(/\/[^\/]*$/, '/');
+  window.location.href=base+'te_planner.html';
 }
 
 // ── Settings ───────────────────────────────────────────────────────────────
