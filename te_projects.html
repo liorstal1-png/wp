@@ -97,6 +97,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 </div>
 
 <script>
+window.onerror=function(msg,src,line,col,err){alert('ERROR: '+msg+' line:'+line);};
 var PREFIX='te_proj_';
 var _editId=null;
 
@@ -126,7 +127,7 @@ function getSprintConfig(){
 function saveSprintConfig(cfg){localStorage.setItem('te_sprint_config',JSON.stringify(cfg));}
 
 // ── Render home ────────────────────────────────────────────────────────────
-function renderGrid(){
+window.renderGrid=function renderGrid(){
   var g=document.getElementById('grid');g.innerHTML='';
   listProjects().forEach(function(p){
     var c=document.createElement('div');c.className='card';
@@ -155,7 +156,7 @@ function renderGrid(){
   add.innerHTML='<div class="plus">+</div><div style="font-size:12px;">פרויקט חדש</div>';
   add.onclick=function(){openProjModal();};
   g.appendChild(add);
-}
+};
 
 // ── Project CRUD ───────────────────────────────────────────────────────────
 function openProjModal(id){
