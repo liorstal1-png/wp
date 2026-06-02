@@ -1330,6 +1330,7 @@ function openWorkerModal(wid,tid){
     var team=curTid?D.teams.find(function(t){return t.id===curTid;}):null;
     var grp=team?D.groups.find(function(g){return g.id===team.gid;}):null;
     var grpCol=grp&&grp.color?grp.color:null;
+    console.log('refreshColors: tid='+curTid+' team='+JSON.stringify(team)+' grp='+JSON.stringify(grp)+' grpCol='+grpCol);
     buildColors('wm-colors',w?w.color:null,true,grpCol);
   }
   refreshColors();
