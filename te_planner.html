@@ -328,6 +328,8 @@ var _eGid=null,_eTmid=null,_eWid=null,_eTid=null,_eSid=null,_cpTarget=null,_ctxS
 var _clipboard=null;
 var _lastClickedTid=null;
 var _lastPasteWid=null;
+var _lastMouseX=null;
+var _lastMouseWi=null; // week index under mouse
 var _undoStack=[], _UNDO_MAX=4;
 function snapshot(){_undoStack.push(JSON.stringify(D));if(_undoStack.length>_UNDO_MAX)_undoStack.shift();}
 function undo(){if(!_undoStack.length){toast('אין מה לבטל');return;}D=JSON.parse(_undoStack.pop());clearSel();render();toast('↩ ביטול פעולה');}
@@ -1169,6 +1171,15 @@ function startDepDrag(e,dot){
   document.addEventListener('mouseup',onUp);
 }
 
+// track mouse week position for paste
+document.getElementById('tlwrap').addEventListener('mousemove',function(e){
+  var wr=document.getElementById('tlwrap').getBoundingClientRect();
+  var tlwrap=document.getElementById('tlwrap');
+  var sc=Math.round((tlwrap.scrollWidth-tlwrap.clientWidth-tlwrap.scrollLeft)/WW());
+  _lastMouseWi=Math.floor((wr.right-e.clientX)/WW())+sc;
+  _lastMouseWi=Math.max(0,Math.min(TL_WEEKS-1,_lastMouseWi));
+},{passive:true});
+
 // ── SCROLL SYNC ────────────────────────────────────────────────────────────
 var _sync=false;
 (function(){
@@ -1456,6 +1467,13 @@ window.addEventListener('keydown',function(e){
     snapshot();
     var nt=JSON.parse(JSON.stringify(_clipboard));
     nt.id=D.nextTid++;nt.wid=w.id;nt.color=null;
+    // place at mouse position, keep original span
+    var span=Math.round(diffW(pd(nt.start),pd(nt.end)));
+    if(span<1)span=1;
+    if(_lastMouseWi!==null){
+      nt.start=fd(wkDate(_lastMouseWi));
+      nt.end=fd(addW(pd(nt.start),span));
+    }
     D.tasks.push(nt);
     render();toast('📋 הודבק ל-'+w.name);
   }
