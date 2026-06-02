@@ -1393,6 +1393,25 @@ document.getElementById('modeBtn').textContent=MODE_WEEKS?'📅 תאריכים':
 
 render();
 setTimeout(function(){document.getElementById('tlwrap').scrollLeft=0;},100);
+
+// Expose modal functions globally
+window.cm=cm;
+window.om=om;
+window.saveGroup=saveGroup;
+window.saveTeam=saveTeam;
+window.saveWorker=saveWorker;
+window.saveTask=saveTask;
+window.saveSprint=saveSprint;
+window.saveMilestone=saveMilestone;
+window.openMsModal=openMsModal;
+window.openGroupModal=openGroupModal;
+window.openTeamModal=openTeamModal;
+window.openWorkerModal=openWorkerModal;
+window.openTaskModal=openTaskModal;
+window.openSprintModal=openSprintModal;
+window.quickRange=quickRange;
+window.goBackHome=goBackHome;
+window.openBlockCtx=openBlockCtx;
 initDepCanvas();
 initDepHover();
 
