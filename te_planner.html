@@ -1178,8 +1178,7 @@ document.addEventListener('mousemove',function(e){
   var wr=tlwrap.getBoundingClientRect();
   // only track when mouse is inside tlwrap bounds
   if(e.clientX<wr.left||e.clientX>wr.right||e.clientY<wr.top||e.clientY>wr.bottom)return;
-  var sc=Math.round((tlwrap.scrollWidth-tlwrap.clientWidth-tlwrap.scrollLeft)/WW());
-  var wi=Math.floor((wr.right-e.clientX)/WW())+sc;
+  var wi=Math.floor((wr.right-e.clientX-tlwrap.scrollLeft)/WW());
   _lastMouseWi=Math.max(0,Math.min(TL_WEEKS-1,wi));
 },{passive:true});
 
@@ -1474,9 +1473,6 @@ window.addEventListener('keydown',function(e){
     var span=Math.round(diffW(pd(nt.start),pd(nt.end)));
     if(span<1)span=1;
     if(_lastMouseWi!==null){
-      var _tw=document.getElementById('tlwrap');
-      var _wr=_tw.getBoundingClientRect();
-      console.log('wi='+_lastMouseWi+' scrollLeft='+_tw.scrollLeft+' scrollWidth='+_tw.scrollWidth+' clientWidth='+_tw.clientWidth+' WW='+WW()+' sc='+Math.round((_tw.scrollWidth-_tw.clientWidth-_tw.scrollLeft)/WW()));
       nt.start=fd(wkDate(_lastMouseWi));
       nt.end=fd(addW(pd(nt.start),span));
     }
