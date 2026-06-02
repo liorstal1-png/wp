@@ -149,6 +149,8 @@ function renderGrid(){
 // ── Project CRUD ───────────────────────────────────────────────────────────
 function openProjModal(id){
   _editId=id||null;
+  // ensure null for new project
+  if(!id)_editId=null;
   document.getElementById('pm-title').textContent=id?'ערוך פרויקט':'פרויקט חדש';
   var p=id?loadProject(id):null;
   document.getElementById('pm-name').value=p?p.meta.name:'';
@@ -161,12 +163,15 @@ function closeProjModal(){document.getElementById('projModal').classList.remove(
 function saveProj(){
   var name=document.getElementById('pm-name').value.trim();if(!name)return;
   var desc=document.getElementById('pm-desc').value.trim();
+  var isNew=!_editId;
   var id=_editId||('p'+Date.now());
   var existing=_editId?loadProject(id):null;
   var meta={id:id,name:name,desc:desc,createdAt:existing?existing.meta.createdAt:Date.now()};
   saveProject(id,meta,existing?existing.data:null);
-  closeProjModal();renderGrid();
-  if(!_editId)openProject(id);
+  _editId=null;
+  closeProjModal();
+  renderGrid();
+  if(isNew)openProject(id);
 }
 function editProj(id,e){e.stopPropagation();openProjModal(id);}
 function delProj(id,e){
@@ -194,9 +199,7 @@ function openProject(id){
   } else {
     sessionStorage.removeItem('te_active');
   }
-  // use relative path - works locally and on GitHub Pages
-  var base=window.location.href.replace(/\/[^\/]*$/, '/');
-  window.location.href=base+'te_planner.html';
+  window.location.href='./te_planner.html';
 }
 
 // ── Settings ───────────────────────────────────────────────────────────────
