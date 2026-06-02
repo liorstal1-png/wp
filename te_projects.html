@@ -131,13 +131,24 @@ function renderGrid(){
   listProjects().forEach(function(p){
     var c=document.createElement('div');c.className='card';
     var updated=p.updatedAt?new Date(p.updatedAt).toLocaleDateString('he-IL'):'';
-    c.innerHTML='<div class="card-actions">'+
-      '<button onclick="editProj(\''+p.id+'\',event)">✏️</button>'+
-      '<button onclick="delProj(\''+p.id+'\',event)" style="color:#E24B4A;">🗑</button>'+
-      '</div>'+
-      '<div class="card-name">'+p.name+'</div>'+
-      '<div class="card-meta">'+(p.desc?p.desc+'<br>':'')+(updated?'עודכן: '+updated:'')+'</div>';
-    (function(pid){c.addEventListener('click',function(e){if(e.target.closest('.card-actions'))return;openProject(pid);});})(p.id);
+    // name and meta
+    var nm=document.createElement('div');nm.className='card-name';nm.textContent=p.name;
+    var mt=document.createElement('div');mt.className='card-meta';mt.textContent=(p.desc?p.desc+' · ':'')+( updated?'עודכן: '+updated:'');
+    // action buttons
+    var acts=document.createElement('div');acts.className='card-actions';
+    var eb=document.createElement('button');eb.textContent='✏️';
+    var db=document.createElement('button');db.textContent='🗑';db.style.color='#E24B4A';
+    acts.appendChild(eb);acts.appendChild(db);
+    c.appendChild(acts);c.appendChild(nm);c.appendChild(mt);
+    // click handlers using closure
+    (function(id){
+      c.addEventListener('click',function(e){
+        if(e.target===eb||e.target===db)return;
+        openProject(id);
+      });
+      eb.addEventListener('click',function(e){e.stopPropagation();editProj(id,e);});
+      db.addEventListener('click',function(e){e.stopPropagation();delProj(id,e);});
+    })(p.id);
     g.appendChild(c);
   });
   var add=document.createElement('div');add.className='add-card';
