@@ -107,7 +107,13 @@ function listProjects(){
   for(var i=0;i<localStorage.length;i++){
     var k=localStorage.key(i);
     if(k&&k.indexOf(PREFIX)===0){
-      try{var p=JSON.parse(localStorage.getItem(k));if(p&&p.meta){p.meta.id=String(p.meta.id);list.push(p.meta);}}catch(e){}
+      try{
+        var p=JSON.parse(localStorage.getItem(k));
+        // skip corrupted entries where id is not a simple string
+        if(p&&p.meta&&typeof p.meta.id==='string'&&p.meta.id.indexOf('[')<0){
+          list.push(p.meta);
+        }
+      }catch(e){}
     }
   }
   list.sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0);});
@@ -175,7 +181,8 @@ function saveProj(){
   var name=document.getElementById('pm-name').value.trim();if(!name)return;
   var desc=document.getElementById('pm-desc').value.trim();
   var isNew=!_editId;
-  var id=_editId||('p'+Date.now());
+  // ensure id is always a clean string
+  var id=(typeof _editId==='string'&&_editId)?_editId:('p'+Date.now());
   var existing=_editId?loadProject(id):null;
   var meta={id:id,name:name,desc:desc,createdAt:existing?existing.meta.createdAt:Date.now()};
   saveProject(id,meta,existing?existing.data:null);
