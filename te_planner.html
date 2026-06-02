@@ -322,6 +322,7 @@ var ZL=100, TL_WEEKS=24, MODE_WEEKS=false;
 var TODAY=new Date(); TODAY.setHours(12,0,0,0);
 var TL_START=sundayBefore(TODAY);
 var collapsed={groups:{},teams:{}};
+function safeCollapsed(){if(!collapsed)collapsed={};if(!collapsed.groups)collapsed.groups={};if(!collapsed.teams)collapsed.teams={};}
 var selectedTids=new Set();
 var _eGid=null,_eTmid=null,_eWid=null,_eTid=null,_eSid=null,_cpTarget=null,_ctxSprId=null;
 var _clipboard=null;
@@ -376,7 +377,7 @@ function loadData(){
     var o=JSON.parse(s);
     D=o.D;ZL=o.ZL||100;TL_WEEKS=o.TL_WEEKS||24;
     if(o.TL_START)TL_START=pd(o.TL_START);
-    if(o.collapsed)collapsed=o.collapsed;
+    if(o.collapsed){collapsed=o.collapsed;if(!collapsed.groups)collapsed.groups={};if(!collapsed.teams)collapsed.teams={};}
     if(o.MODE_WEEKS!==undefined)MODE_WEEKS=o.MODE_WEEKS;
     if(!D.groups)D.groups=[];if(!D.teams)D.teams=[];if(!D.sprints)D.sprints=[];if(!D.milestones)D.milestones=[];if(!D.nextMid)D.nextMid=1;if(!D.deps)D.deps=[];if(!D.nextDid)D.nextDid=1;
     // clean orphaned deps immediately on load
@@ -430,7 +431,7 @@ function render(){
   requestAnimationFrame(redrawDeps);
 }
 
-function getRows(){
+function getRows(){safeCollapsed();
   var rows=[];
   D.groups.forEach(function(g){
     rows.push({type:'group',obj:g});
