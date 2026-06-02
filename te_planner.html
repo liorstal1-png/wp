@@ -1285,6 +1285,28 @@ document.getElementById('applyRangeBtn').addEventListener('click',function(){
   if(w>200)w=200;
   if(sVal&&sVal.length===10)TL_START=sundayBefore(pd(sVal));
   TL_WEEKS=w;
+  // regenerate sprints for new range
+  (function(){
+    try{
+      var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
+      if(cfg&&cfg.startDate){
+        var wps=cfg.weeksPerSprint||3;
+        var firstN=cfg.firstSprint||1;
+        var sDate=new Date(cfg.startDate+'T12:00:00');
+        var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
+        var s=new Date(sDate);var n=firstN;
+        while(new Date(s.getTime()+wps*7*86400000)<TL_START){s=new Date(s.getTime()+wps*7*86400000);n++;}
+        if(n>firstN){s=new Date(s.getTime()-wps*7*86400000);n--;}
+        var sprints=[];var sid=1;
+        while(s<tlEnd){
+          var end=new Date(s.getTime()+wps*7*86400000-86400000);
+          sprints.push({id:sid++,name:'Sprint '+n,start:fd(s),end:fd(end)});
+          s=new Date(s.getTime()+wps*7*86400000);n++;
+        }
+        D.sprints=sprints;D.nextSid=sprints.length+1;
+      }
+    }catch(e){}
+  })();
   // Auto-fit zoom so the full range fills the available width
   var tlwrap=document.getElementById('tlwrap');
   var availW=tlwrap.clientWidth||800;
@@ -1372,7 +1394,7 @@ document.getElementById('modeBtn').textContent=MODE_WEEKS?'📅 תאריכים':
       var wps=cfg.weeksPerSprint||3;
       var firstN=cfg.firstSprint||1;
       var sDate=new Date(cfg.startDate+'T12:00:00');
-      var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+8)*7*86400000);
+      var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
       var s=new Date(sDate);
       var n=firstN;
       while(new Date(s.getTime()+wps*7*86400000)<TL_START){s=new Date(s.getTime()+wps*7*86400000);n++;}
