@@ -1317,7 +1317,15 @@ function saveTeam(){
   else D.teams.push({id:D.nextTmid++,name:name,gid:gid});
   cm('tmmodal');render();
 }
-function openWorkerModal(wid,tid){_eWid=wid||null;var w=wid?D.workers.find(function(x){return x.id===wid;}):null;document.getElementById('wm-title').textContent=w?'ערוך עובד':'הוסף עובד';document.getElementById('wm-name').value=w?w.name:'';var sel=document.getElementById('wm-team');sel.innerHTML='<option value="">ללא צוות</option>'+D.teams.map(function(t){return '<option value="'+t.id+'">'+t.name+'</option>';}).join('');sel.value=w?(w.tid||''):(tid||'');buildColors('wm-colors',w?w.color:COLS[D.workers.length%COLS.length],false);om('wmodal');setTimeout(function(){document.getElementById('wm-name').focus();},50);}
+function openWorkerModal(wid,tid){_eWid=wid||null;var w=wid?D.workers.find(function(x){return x.id===wid;}):null;document.getElementById('wm-title').textContent=w?'ערוך עובד':'הוסף עובד';document.getElementById('wm-name').value=w?w.name:'';var sel=document.getElementById('wm-team');sel.innerHTML='<option value="">ללא צוות</option>'+D.teams.map(function(t){return '<option value="'+t.id+'">'+t.name+'</option>';}).join('');sel.value=w?(w.tid||''):(tid||'');  var wTid=w?w.tid:parseInt(document.getElementById('wm-team').value)||null;
+  var wTeam2=wTid?D.teams.find(function(t){return t.id===wTid;}):null;
+  var wGrp2=wTeam2?D.groups.find(function(g){return g.id===wTeam2.gid;}):null;
+  buildColors('wm-colors',w?w.color:null,true,wGrp2&&wGrp2.color?wGrp2.color:null);
+  document.getElementById('wm-team').onchange=function(){
+    var t3=D.teams.find(function(t){return t.id===parseInt(this.value);},this);
+    var g3=t3?D.groups.find(function(g){return g.id===t3.gid;}):null;
+    buildColors('wm-colors',null,true,g3&&g3.color?g3.color:null);
+  };om('wmodal');setTimeout(function(){document.getElementById('wm-name').focus();},50);}
 function saveWorker(){var name=document.getElementById('wm-name').value.trim();if(!name)return;var tid=parseInt(document.getElementById('wm-team').value)||null;var col=(document.querySelector('#wm-colors .copt.on')||{style:{background:COLS[0]}}).style.background||COLS[0];snapshot();if(_eWid){var w=D.workers.find(function(x){return x.id===_eWid;});w.name=name;w.color=col;w.tid=tid;}else D.workers.push({id:D.nextWid++,name:name,color:col,tid:tid});cm('wmodal');render();}
 
 function openTaskModal(tid,wid,startDate){_eTid=tid||null;var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';document.getElementById('tsm-name').value=t?t.name:'';var sel=document.getElementById('tsm-worker');sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));var td=fd(TODAY);document.getElementById('tsm-start').value=t?t.start:(startDate||td);document.getElementById('tsm-end').value=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));buildColors('tsm-colors',t?t.color:null,true);
