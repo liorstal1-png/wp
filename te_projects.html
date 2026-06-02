@@ -182,7 +182,9 @@ function delProj(id,e){
 
 // ── Open project (navigate to planner) ────────────────────────────────────
 function openProject(id){
+  console.log('openProject called, id='+id);
   var proj=loadProject(id);
+  console.log('proj loaded:', proj?'yes':'null');
   if(!proj)return;
   // Pass data via sessionStorage - completely isolated per session
   sessionStorage.setItem('te_active_pid', id);
