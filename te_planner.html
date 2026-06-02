@@ -229,7 +229,8 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
     <div class="mhdr"><span class="mtitle" id="wm-title">הוסף עובד</span><button class="mx" onclick="cm('wmodal')">✕</button></div>
     <div class="mbody">
       <div class="fld"><label>שם</label><input id="wm-name" placeholder="שם העובד..."/></div>
-      <div class="fld"><label>צוות</label><select id="wm-team"></select></div>
+      <div class="fld"><label>קבוצה</label><select id="wm-group"></select></div>
+      <div class="fld"><label>צוות (אופציונלי)</label><select id="wm-team"></select></div>
       <div class="fld"><label>צבע</label><div class="crow" id="wm-colors"></div></div>
     </div>
     <div class="mfoot"><button class="btn" onclick="cm('wmodal')">ביטול</button><button class="btn btn-p" onclick="saveWorker()">שמור</button></div>
@@ -1322,19 +1323,33 @@ function openWorkerModal(wid,tid){
   var w=wid?D.workers.find(function(x){return x.id===wid;}):null;
   document.getElementById('wm-title').textContent=w?'ערוך עובד':'הוסף עובד';
   document.getElementById('wm-name').value=w?w.name:'';
-  var sel=document.getElementById('wm-team');
-  sel.innerHTML='<option value="">ללא צוות</option>'+D.teams.map(function(t){return '<option value="'+t.id+'">'+t.name+'</option>';}).join('');
-  sel.value=w?(w.tid||''):(tid||'');
+  // find worker's current group
+  var curTeam=w&&w.tid?D.teams.find(function(t){return t.id===w.tid;}):null;
+  var curGid=curTeam?curTeam.gid:(tid?null:null);
+  // populate group selector
+  var gSel=document.getElementById('wm-group');
+  gSel.innerHTML='<option value="">ללא קבוצה</option>'+D.groups.map(function(g){return '<option value="'+g.id+'">'+g.name+'</option>';}).join('');
+  gSel.value=curGid||'';
+  // populate team selector based on group
+  function refreshTeams(gid){
+    var tSel=document.getElementById('wm-team');
+    var teams=gid?D.teams.filter(function(t){return t.gid===gid;}):D.teams;
+    tSel.innerHTML='<option value="">ללא צוות</option>'+teams.map(function(t){return '<option value="'+t.id+'">'+t.name+'</option>';}).join('');
+    tSel.value=w?(w.tid||''):(tid||'');
+  }
+  refreshTeams(curGid);
   function refreshColors(){
-    var curTid=parseInt(sel.value)||null;
-    var team=curTid?D.teams.find(function(t){return t.id===curTid;}):null;
-    var grp=team?D.groups.find(function(g){return g.id===team.gid;}):null;
+    var gid=parseInt(gSel.value)||null;
+    var grp=gid?D.groups.find(function(g){return g.id===gid;}):null;
     var grpCol=grp&&grp.color?grp.color:null;
-    console.log('refreshColors: tid='+curTid+' team='+JSON.stringify(team)+' grp='+JSON.stringify(grp)+' grpCol='+grpCol);
     buildColors('wm-colors',w?w.color:null,true,grpCol);
   }
   refreshColors();
-  sel.onchange=function(){refreshColors();};
+  gSel.onchange=function(){
+    var gid=parseInt(gSel.value)||null;
+    refreshTeams(gid);
+    refreshColors();
+  };
   om('wmodal');
   setTimeout(function(){document.getElementById('wm-name').focus();},50);
 }
