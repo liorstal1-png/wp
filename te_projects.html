@@ -137,7 +137,7 @@ function renderGrid(){
       '</div>'+
       '<div class="card-name">'+p.name+'</div>'+
       '<div class="card-meta">'+(p.desc?p.desc+'<br>':'')+(updated?'עודכן: '+updated:'')+'</div>';
-    c.addEventListener('click',function(){openProject(p.id);});
+    (function(pid){c.addEventListener('click',function(e){if(e.target.closest('.card-actions'))return;openProject(pid);});})(p.id);
     g.appendChild(c);
   });
   var add=document.createElement('div');add.className='add-card';
@@ -182,9 +182,7 @@ function delProj(id,e){
 
 // ── Open project (navigate to planner) ────────────────────────────────────
 function openProject(id){
-  console.log('openProject called, id='+id);
   var proj=loadProject(id);
-  console.log('proj loaded:', proj?'yes':'null');
   if(!proj)return;
   // Pass data via sessionStorage - completely isolated per session
   sessionStorage.setItem('te_active_pid', id);
