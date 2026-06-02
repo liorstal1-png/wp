@@ -106,7 +106,7 @@ function listProjects(){
   for(var i=0;i<localStorage.length;i++){
     var k=localStorage.key(i);
     if(k&&k.indexOf(PREFIX)===0){
-      try{var p=JSON.parse(localStorage.getItem(k));if(p&&p.meta)list.push(p.meta);}catch(e){}
+      try{var p=JSON.parse(localStorage.getItem(k));if(p&&p.meta){p.meta.id=String(p.meta.id);list.push(p.meta);}}catch(e){}
     }
   }
   list.sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0);});
@@ -148,20 +148,19 @@ function renderGrid(){
       });
       eb.addEventListener('click',function(e){e.stopPropagation();editProj(id,e);});
       db.addEventListener('click',function(e){e.stopPropagation();delProj(id,e);});
-    })(p.id);
+    })(String(p.id));
     g.appendChild(c);
   });
   var add=document.createElement('div');add.className='add-card';
   add.innerHTML='<div class="plus">+</div><div style="font-size:12px;">פרויקט חדש</div>';
-  add.onclick=openProjModal;
+  add.onclick=function(){openProjModal();};
   g.appendChild(add);
 }
 
 // ── Project CRUD ───────────────────────────────────────────────────────────
 function openProjModal(id){
-  _editId=id||null;
-  // ensure null for new project
-  if(!id)_editId=null;
+  // ensure id is a valid string, not an event object
+  _editId=(id&&typeof id==='string')?id:null;
   document.getElementById('pm-title').textContent=id?'ערוך פרויקט':'פרויקט חדש';
   var p=id?loadProject(id):null;
   document.getElementById('pm-name').value=p?p.meta.name:'';
