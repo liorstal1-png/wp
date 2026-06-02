@@ -486,7 +486,8 @@ function renderSidebar(){
         (function(gid){addWBtn.addEventListener('click',function(e){e.stopPropagation();
           // find first team in group or null
           var firstTeam=D.teams.find(function(t){return t.gid===gid;});
-          openWorkerModal(null,firstTeam?firstTeam.id:null);
+          // pass gid as negative number to distinguish from tid
+          openWorkerModal(null,firstTeam?firstTeam.id:-(g.id));
         });})(g.id);
         // edit button
         var eBtn=document.createElement('button');eBtn.className='row-del';eBtn.textContent='✏️';eBtn.title='ערוך קבוצה';
@@ -1324,8 +1325,12 @@ function openWorkerModal(wid,tid){
   document.getElementById('wm-title').textContent=w?'ערוך עובד':'הוסף עובד';
   document.getElementById('wm-name').value=w?w.name:'';
   // find worker's current group
-  var curTeam=w&&w.tid?D.teams.find(function(t){return t.id===w.tid;}):null;
-  var curGid=curTeam?curTeam.gid:(tid?null:null);
+  // tid can be negative = -gid (from group's + עובד button)
+  var passedGid=tid&&tid<0?-tid:null;
+  var realTid=tid&&tid>0?tid:null;
+  var curTeam=w&&w.tid?D.teams.find(function(t){return t.id===w.tid;}):
+              (realTid?D.teams.find(function(t){return t.id===realTid;}):null);
+  var curGid=curTeam?curTeam.gid:(passedGid||null);
   // populate group selector
   var gSel=document.getElementById('wm-group');
   gSel.innerHTML='<option value="">ללא קבוצה</option>'+D.groups.map(function(g){return '<option value="'+g.id+'">'+g.name+'</option>';}).join('');
@@ -1338,6 +1343,8 @@ function openWorkerModal(wid,tid){
     tSel.value=w?(w.tid||''):(tid||'');
   }
   refreshTeams(curGid);
+  // preselect team if passed
+  if(realTid)document.getElementById('wm-team').value=realTid;
   function refreshColors(){
     var gid=parseInt(gSel.value)||null;
     var grp=gid?D.groups.find(function(g){return g.id===gid;}):null;
@@ -1640,4 +1647,3 @@ function groupShades(base){
   });
   return shades;
 }
->
