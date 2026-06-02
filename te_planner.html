@@ -1472,7 +1472,9 @@ window.addEventListener('keydown',function(e){
     var span=Math.round(diffW(pd(nt.start),pd(nt.end)));
     if(span<1)span=1;
     if(_lastMouseWi!==null){
-      console.log('paste wi='+_lastMouseWi+' wkDate='+fd(wkDate(_lastMouseWi)));
+      var tlwrap2=document.getElementById('tlwrap');
+      var wr2=tlwrap2.getBoundingClientRect();
+      console.log('paste wi='+_lastMouseWi+' sc='+Math.round((tlwrap2.scrollWidth-tlwrap2.clientWidth-tlwrap2.scrollLeft)/WW())+' scrollLeft='+tlwrap2.scrollLeft+' scrollWidth='+tlwrap2.scrollWidth+' clientWidth='+tlwrap2.clientWidth+' WW='+WW());
       nt.start=fd(wkDate(_lastMouseWi));
       nt.end=fd(addW(pd(nt.start),span));
     }
