@@ -487,6 +487,7 @@ function renderSidebar(){
           // find first team in group or null
           var firstTeam=D.teams.find(function(t){return t.gid===gid;});
           // pass gid as negative number to distinguish from tid
+          console.log('addWBtn clicked, gid='+gid+' firstTeam='+JSON.stringify(firstTeam));
           openWorkerModal(null,firstTeam?firstTeam.id:-gid);
         });})(g.id);
         // edit button
