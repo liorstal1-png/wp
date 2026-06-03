@@ -458,24 +458,25 @@ function render(){
 }
 
 function getRows(){safeCollapsed();
-  console.log('workers:',D.workers.map(function(w){return {id:w.id,name:w.name,tid:w.tid,gid:w.gid};}));
   var rows=[];
-  var shownWids=new Set();
+  var shownWids=[];
+  function isShown(id){return shownWids.indexOf(+id)!==-1;}
+  function markShown(id){shownWids.push(+id);}
   D.groups.forEach(function(g){
     rows.push({type:'group',obj:g});
     if(collapsed.groups[g.id])return;
     D.teams.filter(function(t){return t.gid===g.id;}).forEach(function(t){
       rows.push({type:'team',obj:t});
       if(collapsed.teams[t.id])return;
-      D.workers.filter(function(w){return w.tid===t.id;}).forEach(function(w){rows.push({type:'worker',obj:w});shownWids.add(w.id);});
+      D.workers.filter(function(w){return +w.tid===+t.id;}).forEach(function(w){rows.push({type:'worker',obj:w});markShown(w.id);});
     });
-    // workers directly in group (gid set, tid null or no matching team)
+    // workers directly in group (gid matches, no team or team not found)
     D.workers.filter(function(w){
-      return !shownWids.has(w.id)&&w.gid===g.id&&(!w.tid||!D.teams.find(function(t){return t.id===w.tid;}));
-    }).forEach(function(w){rows.push({type:'worker',obj:w});shownWids.add(w.id);});
+      return !isShown(w.id)&&+w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));
+    }).forEach(function(w){rows.push({type:'worker',obj:w});markShown(w.id);});
   });
   // workers with no group and no team
-  D.workers.filter(function(w){return !shownWids.has(w.id);}).forEach(function(w){rows.push({type:'worker',obj:w});});
+  D.workers.filter(function(w){return !isShown(w.id);}).forEach(function(w){rows.push({type:'worker',obj:w});});
   return rows;
 }
 function rowH(r){return r.type==='group'?22:r.type==='team'?30:40;}
