@@ -479,7 +479,7 @@ function getRows(){safeCollapsed();
   D.workers.filter(function(w){return !isShown(w.id);}).forEach(function(w){rows.push({type:'worker',obj:w});});
   return rows;
 }
-function rowH(r){return r.type==='group'?22:r.type==='team'?30:40;}
+function rowH(r){return r.type==='group'?28:r.type==='team'?30:40;}
 
 function renderSidebar(){
   var sb=document.getElementById('sidebarBody');sb.innerHTML='';
