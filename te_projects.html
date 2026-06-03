@@ -88,6 +88,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
       </div>
       <div class="section-title" style="margin-top:8px;">שעות</div>
       <div class="fld"><label>שעות עבודה בשבוע לעובד</label><input type="number" id="ss-hours" min="1" max="168" value="42"/></div>
+      <div class="section-title" style="margin-top:8px;">
+        מבנה ארגוני ברירת מחדל
+        <button class="btn btn-sm btn-p" onclick="addOrgGroup()" style="margin-right:8px;padding:2px 8px;">+ קבוצה</button>
+      </div>
+      <div id="orgTree" style="max-height:220px;overflow-y:auto;border:1px solid var(--brd);border-radius:var(--r);padding:6px;background:var(--bg);"></div>
     </div>
     <div class="mfoot">
       <button class="btn" onclick="closeSettings()">ביטול</button>
@@ -202,6 +207,20 @@ function delProj(id,e){
 function openProject(id){
   var proj=loadProject(id);
   if(!proj)return;
+  // apply org template to new projects that have no data
+  if(!proj.data){
+    loadOrgTemplate();
+    if(_orgTemplate.groups.length>0){
+      proj.data={
+        groups:JSON.parse(JSON.stringify(_orgTemplate.groups)),
+        teams:JSON.parse(JSON.stringify(_orgTemplate.teams)),
+        workers:JSON.parse(JSON.stringify(_orgTemplate.workers)),
+        tasks:[],sprints:[],milestones:[],deps:[],
+        nextGid:_orgTemplate.nextGid,nextTmid:_orgTemplate.nextTmid,
+        nextWid:_orgTemplate.nextWid,nextTid:100,nextSid:1,nextMid:1,nextDid:1
+      };
+    }
+  }
   // Pass data via sessionStorage - completely isolated per session
   sessionStorage.setItem('te_active_pid', id);
   sessionStorage.setItem('te_active_pname', proj.meta.name);
@@ -221,7 +240,105 @@ function openProject(id){
 }
 
 // ── Settings ───────────────────────────────────────────────────────────────
+// ── ORG TEMPLATE ──────────────────────────────────────────────────────────
+var _orgTemplate={groups:[],teams:[],workers:[],nextGid:10,nextTmid:20,nextWid:30};
+var COLS=['#378ADD','#1D9E75','#D85A30','#D4537E','#BA7517','#E24B4A','#7F77DD','#639922','#0F6E56','#3C3489'];
+
+function loadOrgTemplate(){
+  var cfg=getSprintConfig();
+  if(cfg.orgTemplate)_orgTemplate=cfg.orgTemplate;
+  else _orgTemplate={groups:[],teams:[],workers:[],nextGid:10,nextTmid:20,nextWid:30};
+}
+
+function renderOrgTree(){
+  var el=document.getElementById('orgTree');
+  if(!el)return;
+  var html='';
+  _orgTemplate.groups.forEach(function(g){
+    html+='<div style="margin-bottom:6px;">';
+    html+='<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;background:'+(g.color||'#eee')+'22;border-radius:4px;border-right:3px solid '+(g.color||'#ccc')+';">';
+    html+='<span style="font-size:12px;font-weight:700;flex:1;">'+g.name+'</span>';
+    html+='<button onclick="addOrgTeam('+g.id+')" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--mut);">+ צוות</button>';
+    html+='<button onclick="addOrgWorker('+g.id+',null)" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--mut);">+ עובד</button>';
+    html+='<button onclick="editOrgGroup('+g.id+')" style="background:none;border:none;cursor:pointer;font-size:11px;">✏️</button>';
+    html+='<button onclick="delOrgGroup('+g.id+')" style="background:none;border:none;cursor:pointer;font-size:11px;color:#E24B4A;">×</button>';
+    html+='</div>';
+    // teams
+    _orgTemplate.teams.filter(function(t){return t.gid===g.id;}).forEach(function(t){
+      html+='<div style="display:flex;align-items:center;gap:6px;padding:3px 6px 3px 18px;border-bottom:1px solid var(--brd);">';
+      html+='<span style="font-size:11px;flex:1;">'+t.name+'</span>';
+      html+='<button onclick="addOrgWorker('+g.id+','+t.id+')" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--mut);">+ עובד</button>';
+      html+='<button onclick="delOrgTeam('+t.id+')" style="background:none;border:none;cursor:pointer;font-size:11px;color:#E24B4A;">×</button>';
+      html+='</div>';
+      // workers in team
+      _orgTemplate.workers.filter(function(w){return w.tid===t.id;}).forEach(function(w){
+        html+='<div style="display:flex;align-items:center;gap:5px;padding:2px 6px 2px 32px;">';
+        html+='<div style="width:8px;height:8px;border-radius:50%;background:'+(w.color||'#999')+';flex-shrink:0;"></div>';
+        html+='<span style="font-size:11px;flex:1;">'+w.name+'</span>';
+        html+='<button onclick="delOrgWorker('+w.id+')" style="background:none;border:none;cursor:pointer;font-size:11px;color:#E24B4A;">×</button>';
+        html+='</div>';
+      });
+    });
+    // workers directly in group (no team)
+    _orgTemplate.workers.filter(function(w){return w.gid===g.id&&!w.tid;}).forEach(function(w){
+      html+='<div style="display:flex;align-items:center;gap:5px;padding:2px 6px 2px 18px;">';
+      html+='<div style="width:8px;height:8px;border-radius:50%;background:'+(w.color||'#999')+';flex-shrink:0;"></div>';
+      html+='<span style="font-size:11px;flex:1;">'+w.name+'</span>';
+      html+='<button onclick="delOrgWorker('+w.id+')" style="background:none;border:none;cursor:pointer;font-size:11px;color:#E24B4A;">×</button>';
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  el.innerHTML=html||'<div style="font-size:11px;color:var(--mut);text-align:center;padding:8px;">לחץ + קבוצה להוספה</div>';
+}
+
+function addOrgGroup(){
+  var name=prompt('שם קבוצה:');if(!name)return;
+  var color=COLS[_orgTemplate.groups.length%COLS.length];
+  _orgTemplate.groups.push({id:_orgTemplate.nextGid++,name:name,color:color});
+  renderOrgTree();
+}
+function editOrgGroup(id){
+  var g=_orgTemplate.groups.find(function(x){return x.id===id;});if(!g)return;
+  var name=prompt('שם קבוצה:',g.name);if(!name)return;
+  g.name=name;renderOrgTree();
+}
+function delOrgGroup(id){
+  _orgTemplate.groups=_orgTemplate.groups.filter(function(x){return x.id!==id;});
+  _orgTemplate.teams=_orgTemplate.teams.filter(function(x){return x.gid!==id;});
+  _orgTemplate.workers=_orgTemplate.workers.filter(function(x){return x.gid!==id;});
+  renderOrgTree();
+}
+function addOrgTeam(gid){
+  var name=prompt('שם צוות:');if(!name)return;
+  _orgTemplate.teams.push({id:_orgTemplate.nextTmid++,name:name,gid:gid});
+  renderOrgTree();
+}
+function delOrgTeam(id){
+  _orgTemplate.teams=_orgTemplate.teams.filter(function(x){return x.id!==id;});
+  _orgTemplate.workers=_orgTemplate.workers.filter(function(x){return x.tid!==id;});
+  renderOrgTree();
+}
+function addOrgWorker(gid,tid){
+  var name=prompt('שם עובד:');if(!name)return;
+  var g=_orgTemplate.groups.find(function(x){return x.id===gid;});
+  var color=g&&g.color?lightenHex(g.color,0.3+Math.random()*0.3):COLS[_orgTemplate.workers.length%COLS.length];
+  _orgTemplate.workers.push({id:_orgTemplate.nextWid++,name:name,color:color,gid:gid,tid:tid});
+  renderOrgTree();
+}
+function delOrgWorker(id){
+  _orgTemplate.workers=_orgTemplate.workers.filter(function(x){return x.id!==id;});
+  renderOrgTree();
+}
+function lightenHex(hex,amt){
+  hex=hex.replace('#','');if(hex.length===3)hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  var r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  function h(v){return Math.round(Math.min(255,v+(255-v)*amt)).toString(16).padStart(2,'0');}
+  return '#'+h(r)+h(g)+h(b);
+}
+
 function openSettings(){
+  loadOrgTemplate();
   var cfg=getSprintConfig();
   document.getElementById('ss-first').value=cfg.firstSprint||27;
   document.getElementById('ss-weeks').value=cfg.weeksPerSprint||3;
@@ -232,6 +349,7 @@ function openSettings(){
     document.getElementById('ss-date').value=d.toISOString().slice(0,10);
   }
   document.getElementById('settingsModal').classList.add('open');
+  setTimeout(renderOrgTree,50);
 }
 function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
 function saveSettings(){
@@ -239,7 +357,8 @@ function saveSettings(){
     firstSprint:parseInt(document.getElementById('ss-first').value)||27,
     weeksPerSprint:parseInt(document.getElementById('ss-weeks').value)||3,
     startDate:document.getElementById('ss-date').value,
-    hoursPerWeek:parseInt(document.getElementById('ss-hours').value)||42
+    hoursPerWeek:parseInt(document.getElementById('ss-hours').value)||42,
+    orgTemplate:_orgTemplate
   });
   closeSettings();
   // toast
