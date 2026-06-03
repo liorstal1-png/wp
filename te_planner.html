@@ -457,28 +457,42 @@ function render(){
   requestAnimationFrame(redrawDeps);
 }
 
-function getRows(){safeCollapsed();
+function getRows(){
+  safeCollapsed();
   var rows=[];
-  var shownWids=[];
-  function isShown(id){return shownWids.indexOf(+id)!==-1;}
-  function markShown(id){shownWids.push(+id);}
+  var shown={};
   D.groups.forEach(function(g){
     rows.push({type:'group',obj:g});
+    // if group collapsed, skip all children
     if(collapsed.groups[String(g.id)])return;
-    D.teams.filter(function(t){return t.gid===g.id;}).forEach(function(t){
+    // teams in this group
+    D.teams.filter(function(t){return String(t.gid)===String(g.id);}).forEach(function(t){
       rows.push({type:'team',obj:t});
       if(collapsed.teams[String(t.id)])return;
-      D.workers.filter(function(w){return +w.tid===+t.id;}).forEach(function(w){rows.push({type:'worker',obj:w});markShown(w.id);});
+      // workers in this team
+      D.workers.filter(function(w){return String(w.tid)===String(t.id);}).forEach(function(w){
+        rows.push({type:'worker',obj:w});
+        shown[w.id]=true;
+      });
     });
-    // workers directly in group (gid matches, no team or team not found)
+    // workers directly in group (no team, or team not found)
     D.workers.filter(function(w){
-      return !isShown(w.id)&&+w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));
-    }).forEach(function(w){rows.push({type:'worker',obj:w});markShown(w.id);});
+      if(shown[w.id])return false;
+      if(String(w.gid)!==String(g.id))return false;
+      return !w.tid||!D.teams.find(function(t){return String(t.id)===String(w.tid);});
+    }).forEach(function(w){
+      rows.push({type:'worker',obj:w});
+      shown[w.id]=true;
+    });
   });
-  // workers with no group and no team
-  D.workers.filter(function(w){return !isShown(w.id);}).forEach(function(w){rows.push({type:'worker',obj:w});});
+  // workers not yet shown
+  D.workers.filter(function(w){return !shown[w.id];}).forEach(function(w){
+    rows.push({type:'worker',obj:w});
+  });
   return rows;
 }
+
+
 function rowH(r){return r.type==='group'?28:r.type==='team'?30:40;}
 
 function renderSidebar(){
