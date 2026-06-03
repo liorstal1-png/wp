@@ -458,6 +458,7 @@ function render(){
 }
 
 function getRows(){safeCollapsed();
+  console.log('workers:',D.workers.map(function(w){return {id:w.id,name:w.name,tid:w.tid,gid:w.gid};}));
   var rows=[];
   var shownWids=new Set();
   D.groups.forEach(function(g){
