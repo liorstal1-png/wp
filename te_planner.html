@@ -329,6 +329,14 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 <div class="rollup-tip" id="rollupTip"></div>
 <div class="dep-del-btn" id="depDelBtn">✕</div>
 <script>
+function groupShades(base){
+  if(!base)return COLS;
+  var shades=[];
+  [0.6,0.45,0.3,0.15,0,-0.15,-0.3,-0.45].forEach(function(amt){
+    shades.push(amt>0?lighten(base,amt):amt===0?base:darken(base,Math.abs(amt)));
+  });
+  return shades;
+}
 var COLS=['#378ADD','#1D9E75','#D85A30','#D4537E','#BA7517','#E24B4A','#7F77DD','#639922','#0F6E56','#3C3489','#E07B20','#00BCD4'];
 var MONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 var SK='te_active';
@@ -487,7 +495,6 @@ function renderSidebar(){
           // find first team in group or null
           var firstTeam=D.teams.find(function(t){return t.gid===gid;});
           // pass gid as negative number to distinguish from tid
-          console.log('addWBtn clicked, gid='+gid+' firstTeam='+JSON.stringify(firstTeam));
           openWorkerModal(null,firstTeam?firstTeam.id:-gid);
         });})(g.id);
         // edit button
@@ -1640,11 +1647,3 @@ function goBackHome(){
 </script>
 </body>
 </html
-function groupShades(base){
-  if(!base)return COLS;
-  var shades=[];
-  [0.6,0.45,0.3,0.15,0,-0.15,-0.3,-0.45].forEach(function(amt){
-    shades.push(amt>0?lighten(base,amt):amt===0?base:darken(base,Math.abs(amt)));
-  });
-  return shades;
-}
