@@ -464,10 +464,10 @@ function getRows(){safeCollapsed();
   function markShown(id){shownWids.push(+id);}
   D.groups.forEach(function(g){
     rows.push({type:'group',obj:g});
-    if(collapsed.groups[g.id])return;
+    if(collapsed.groups[String(g.id)])return;
     D.teams.filter(function(t){return t.gid===g.id;}).forEach(function(t){
       rows.push({type:'team',obj:t});
-      if(collapsed.teams[t.id])return;
+      if(collapsed.teams[String(t.id)])return;
       D.workers.filter(function(w){return +w.tid===+t.id;}).forEach(function(w){rows.push({type:'worker',obj:w});markShown(w.id);});
     });
     // workers directly in group (gid matches, no team or team not found)
@@ -488,7 +488,7 @@ function renderSidebar(){
     if(row.type==='group'){
       el.className='tree-group-hdr';
       if(row.obj.color)el.style.background=row.obj.color+'22'; // light tint
-      var tog=document.createElement('span');tog.className='tree-toggle';tog.textContent=collapsed.groups[row.obj.id]?'▶':'▼';
+      var tog=document.createElement('span');tog.className='tree-toggle';tog.textContent=collapsed.groups[String(row.obj.id)]?'▶':'▼';
       var lbl=document.createElement('span');lbl.className='tree-label group-lbl';lbl.contentEditable='true';lbl.spellcheck=false;lbl.textContent=row.obj.name;
       var addBtn=document.createElement('button');addBtn.className='btn btn-sm';addBtn.style.cssText='padding:1px 7px;font-size:11px;font-weight:400;line-height:1;margin-right:auto;color:var(--mut);background:transparent;border:none;';addBtn.textContent='+ צוות';
       var addWBtn=document.createElement('button');addWBtn.style.cssText='padding:1px 6px;font-size:11px;background:transparent;border:none;cursor:pointer;color:var(--mut);line-height:1;';addWBtn.textContent='+ עובד';
@@ -510,11 +510,11 @@ function renderSidebar(){
         el.insertBefore(eBtn,del);
         eBtn.addEventListener('click',function(e){e.stopPropagation();openGroupModal(g.id);});
         del.addEventListener('click',function(e){e.stopPropagation();if(!confirm('למחוק קבוצה?'))return;snapshot();D.groups=D.groups.filter(function(x){return x.id!==g.id;});D.teams.filter(function(t){return t.gid===g.id;}).forEach(function(t){D.workers.filter(function(w){return w.tid===t.id;}).forEach(function(w){w.tid=null;});});D.teams=D.teams.filter(function(t){return t.gid!==g.id;});render();});
-        el.addEventListener('click',function(e){if(e.target===addBtn||e.target===del||e.target===lbl)return;collapsed.groups[g.id]=!collapsed.groups[g.id];render();});
+        el.addEventListener('click',function(e){if(e.target===addBtn||e.target===del||e.target===lbl)return;collapsed.groups[String(g.id)]=!collapsed.groups[String(g.id)];render();});
       })(row.obj);
     } else if(row.type==='team'){
       el.className='tree-team-hdr';
-      var tog=document.createElement('span');tog.className='tree-toggle';tog.textContent=collapsed.teams[row.obj.id]?'▶':'▼';
+      var tog=document.createElement('span');tog.className='tree-toggle';tog.textContent=collapsed.teams[String(row.obj.id)]?'▶':'▼';
       var lbl=document.createElement('span');lbl.className='tree-label team-lbl';lbl.contentEditable='true';lbl.spellcheck=false;lbl.textContent=row.obj.name;
       var addBtn=document.createElement('button');addBtn.className='btn btn-sm';addBtn.style.cssText='padding:1px 7px;font-size:11px;font-weight:400;line-height:1;margin-right:auto;color:var(--mut);background:transparent;border:none;';addBtn.textContent='+ צוות';
       var addWBtn=document.createElement('button');addWBtn.style.cssText='padding:1px 6px;font-size:11px;background:transparent;border:none;cursor:pointer;color:var(--mut);line-height:1;';addWBtn.textContent='+ עובד';
@@ -530,7 +530,7 @@ function renderSidebar(){
         el.insertBefore(eBtn,del);
         eBtn.addEventListener('click',function(e){e.stopPropagation();openTeamModal(t.id,null);});
         del.addEventListener('click',function(e){e.stopPropagation();if(!confirm('למחוק צוות?'))return;snapshot();D.workers.filter(function(w){return w.tid===t.id;}).forEach(function(w){w.tid=null;});D.teams=D.teams.filter(function(x){return x.id!==t.id;});render();});
-        el.addEventListener('click',function(e){if(e.target===addBtn||e.target===del||e.target===lbl)return;collapsed.teams[t.id]=!collapsed.teams[t.id];render();});
+        el.addEventListener('click',function(e){if(e.target===addBtn||e.target===del||e.target===lbl)return;collapsed.teams[String(t.id)]=!collapsed.teams[String(t.id)];render();});
       })(row.obj);
     } else {
       el.className='tree-worker-row';
