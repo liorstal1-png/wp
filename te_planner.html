@@ -324,6 +324,21 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
   </div>
 </div>
 
+<!-- Note modal -->
+<div class="ov" id="noteModal" onclick="if(event.target===this)cm('noteModal')">
+  <div class="modal" style="max-width:340px;">
+    <div class="mhdr"><span class="mtitle">📝 הערה</span><button class="mx" onclick="cm('noteModal')">✕</button></div>
+    <div class="mbody">
+      <div class="fld"><textarea id="note-text" rows="4" placeholder="הוסף הערה למשימה..."></textarea></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="cm('noteModal')">ביטול</button>
+      <button class="btn btn-p" onclick="saveNote()">שמור</button>
+    </div>
+  </div>
+</div>
+
+<div id="taskTooltip" style="position:fixed;z-index:500;pointer-events:none;display:none;max-width:220px;background:#1E2A3A;color:#fff;border-radius:10px;padding:10px 14px;font-family:Heebo,sans-serif;font-size:12px;line-height:1.6;box-shadow:0 4px 20px rgba(0,0,0,.35);direction:rtl;"></div>
 <canvas id="depCanvas" style="position:fixed;top:0;left:0;pointer-events:none;z-index:50;"></canvas>
 <div class="ms-tooltip" id="msTooltip"></div>
 <div class="rollup-tip" id="rollupTip"></div>
@@ -571,7 +586,7 @@ function renderSidebar(){
 function renderSprints(TW,WW_){
   var row=document.getElementById('sprrow');row.innerHTML='';row.style.width=TW+'px';
   var ws=[];
-  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<pd(sv.end).getTime()+86400000){sp=sv;break;}}ws.push(sp);}
+  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<pd(sv.end).getTime()+7*86400000){sp=sv;break;}}ws.push(sp);}
   var i=0;
   while(i<TL_WEEKS){
     if(!ws[i]){var e=document.createElement('div');e.className='spr-empty';e.style.width=WW_+'px';row.appendChild(e);i++;}
@@ -748,6 +763,9 @@ function renderBody(TW,WW_){
           updateSelBar();
           document.getElementById('tlwrap').focus();
         });
+        blk.addEventListener('mouseenter',function(e){showTooltip(e,t);});
+        blk.addEventListener('mousemove',function(e){showTooltip(e,t);});
+        blk.addEventListener('mouseleave',function(){hideTooltip();});
         blk.addEventListener('dblclick',function(e){
           if(e.target.classList.contains('rhandle-r')||e.target.classList.contains('rhandle-l')||e.target.classList.contains('blk-opts')||e.target.classList.contains('blk-del'))return;
           e.stopPropagation();
@@ -904,7 +922,7 @@ function startResizeR(e,tid,blk){
   var os=t.start,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var ns=fd(addW(pd(os),d));if(pd(ns).getTime()>=pd(t.end).getTime()-6*86400000)return;
+    var ns=fd(addW(pd(os),d));if(pd(ns).getTime()>=pd(t.end).getTime())return;
     t.start=ns;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
@@ -918,7 +936,7 @@ function startResizeL(e,tid,blk){
   var oe=t.end,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var ne=fd(addW(pd(oe),d));if(pd(ne).getTime()<=pd(t.start).getTime()+6*86400000)return;
+    var ne=fd(addW(pd(oe),d));if(pd(ne).getTime()<=pd(t.start).getTime())return;
     t.end=ne;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
@@ -1285,6 +1303,7 @@ function openBlockCtx(e,tid){
    {l:'🎨 צבע',f:function(ev){closeCtx();openCP(ev,{type:'task',tid:tid});}},
    {l:'↩ אפס צבע',f:function(){t.color=null;t.risk=false;closeCtx();render();}},
    {sep:1},
+   {l:'📝 '+(t.note?'ערוך הערה':'הוסף הערה'),f:function(){closeCtx();openNoteModal(tid);}},
    {l:t.risk?'✅ הסר סיכון':'⚠️ סיכון / נדרשת העמקה',f:function(){snapshot();t.risk=!t.risk;closeCtx();render();}},
    {sep:1},
    {l:'🗑 מחק',f:function(){snapshot();D.tasks=D.tasks.filter(function(x){return x.id!==tid;});closeCtx();render();},cls:'del'}
@@ -1630,7 +1649,53 @@ document.getElementById('modeBtn').textContent=MODE_WEEKS?'📅 תאריכים':
 render();
 setTimeout(function(){document.getElementById('tlwrap').scrollLeft=0;},100);
 
+// ── TOOLTIP ──────────────────────────────────────────────────────────────
+var _ttTimer=null;
+function showTooltip(e,t){
+  clearTimeout(_ttTimer);
+  _ttTimer=setTimeout(function(){
+    var tt=document.getElementById('taskTooltip');
+    if(!tt)return;
+    var span=Math.round(diffW(pd(t.start),pd(t.end)))+1;
+    var html='<div style="font-weight:700;font-size:13px;margin-bottom:4px;">'+t.name+'</div>';
+    html+='<div style="color:#8EB4D8;font-size:11px;">'+t.start+' → '+t.end+'</div>';
+    html+='<div style="color:#8EB4D8;font-size:11px;margin-bottom:'+(t.note?'6':'0')+'px;">'+span+' שבועות</div>';
+    if(t.risk)html+='<div style="color:#FF6B6B;font-size:11px;margin-bottom:4px;">⚠️ סיכון / נדרשת העמקה</div>';
+    if(t.note)html+='<div style="border-top:1px solid rgba(255,255,255,.15);padding-top:6px;color:#C8D8E8;font-size:11px;white-space:pre-wrap;">'+t.note+'</div>';
+    tt.innerHTML=html;
+    tt.style.display='block';
+    var x=e.clientX+14,y=e.clientY-10;
+    if(x+230>window.innerWidth)x=e.clientX-230;
+    tt.style.left=x+'px';tt.style.top=y+'px';
+  },400);
+}
+function hideTooltip(){
+  clearTimeout(_ttTimer);
+  var tt=document.getElementById('taskTooltip');
+  if(tt)tt.style.display='none';
+}
+
+// ── NOTE ──────────────────────────────────────────────────────────────────
+var _noteTaskId=null;
+function openNoteModal(tid){
+  _noteTaskId=tid;
+  var t=D.tasks.find(function(x){return x.id===tid;});
+  document.getElementById('note-text').value=t&&t.note?t.note:'';
+  om('noteModal');
+  setTimeout(function(){document.getElementById('note-text').focus();},50);
+}
+function saveNote(){
+  var t=D.tasks.find(function(x){return x.id===_noteTaskId;});
+  if(!t)return;
+  snapshot();
+  t.note=document.getElementById('note-text').value.trim()||null;
+  cm('noteModal');render();toast('הערה נשמרה ✓');
+}
+window.openNoteModal=openNoteModal;
+window.saveNote=saveNote;
+
 // Expose modal functions globally
+
 window.cm=cm;
 window.om=om;
 window.saveGroup=saveGroup;
