@@ -1526,11 +1526,11 @@ document.getElementById('applyRangeBtn').addEventListener('click',function(){
       if(cfg&&cfg.startDate){
         var wps=cfg.weeksPerSprint||3;
         var firstN=cfg.firstSprint||1;
-        var sDate=new Date(cfg.startDate+'T12:00:00');
+        var sDate=new Date(cfg.startDate+'T00:00:00Z');
         var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
         var s=new Date(sDate);var n=firstN;
-        while(new Date(s.getTime()+wps*7*86400000)<TL_START){s=new Date(s.getTime()+wps*7*86400000);n++;}
-        if(n>firstN){s=new Date(s.getTime()-wps*7*86400000);n--;}
+        var tlStartUTC2=new Date(Date.UTC(TL_START.getUTCFullYear(),TL_START.getUTCMonth(),TL_START.getUTCDate()));
+        while(new Date(s.getTime()+wps*7*86400000)<=tlStartUTC2){s=new Date(s.getTime()+wps*7*86400000);n++;}
         // align TL_START to first sprint start
         TL_START=new Date(s);
         var sprints=[];var sid=1;
@@ -1708,12 +1708,13 @@ document.getElementById('modeBtn').textContent=MODE_WEEKS?'📅 תאריכים':
     if(cfg&&cfg.startDate){
       var wps=cfg.weeksPerSprint||3;
       var firstN=cfg.firstSprint||1;
-      var sDate=new Date(cfg.startDate+'T12:00:00');
+      var sDate=new Date(cfg.startDate+'T00:00:00Z');
       var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
       var s=new Date(sDate);
       var n=firstN;
-      while(new Date(s.getTime()+wps*7*86400000)<TL_START){s=new Date(s.getTime()+wps*7*86400000);n++;}
-      if(n>firstN){s=new Date(s.getTime()-wps*7*86400000);n--;}
+      // normalize TL_START to UTC midnight for comparison
+      var tlStartUTC=new Date(Date.UTC(TL_START.getUTCFullYear(),TL_START.getUTCMonth(),TL_START.getUTCDate()));
+      while(new Date(s.getTime()+wps*7*86400000)<=tlStartUTC){s=new Date(s.getTime()+wps*7*86400000);n++;}
       // align TL_START to sprint start
       TL_START=new Date(s);
       var sprints=[];var sid=1;
