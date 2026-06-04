@@ -392,7 +392,7 @@ function undo(){
   clearSel();render();toast('↩ ביטול פעולה');
 }
 
-function pd(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2],12,0,0,0);}
+function pd(s){var p=s.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2],12,0,0,0));}
 function fd(dt){var y=dt.getFullYear(),m=dt.getMonth()+1,d=dt.getDate();return y+'-'+(m<10?'0':'')+m+'-'+(d<10?'0':'')+d;}
 function addW(dt,n){return new Date(dt.getTime()+n*7*86400000);}
 function addD(dt,n){return new Date(dt.getTime()+n*86400000);}
@@ -1350,7 +1350,17 @@ document.getElementById('sprCtxDel').addEventListener('click',function(){snapsho
 // ── COLOR PICKER ────────────────────────────────────────────────────────────
 function openCP(e,target){
   _cpTarget=target;var pop=document.getElementById('cpop');pop.innerHTML='';
-  COLS.forEach(function(col){
+  // use group shades if target is a worker with a group color
+  var palette=COLS;
+  if(target.type==='worker'){
+    var w=D.workers.find(function(x){return x.id===target.wid;});
+    if(w&&w.gid){
+      var g=D.groups.find(function(x){return x.id===w.gid;});
+      if(!g&&w.tid){var t=D.teams.find(function(x){return x.id===w.tid;});if(t)g=D.groups.find(function(x){return x.id===t.gid;});}
+      if(g&&g.color)palette=groupShades(g.color);
+    }
+  }
+  palette.forEach(function(col){
     var sw=document.createElement('div');sw.className='copt';sw.style.background=col;
     sw.addEventListener('click',function(ev){
       ev.stopPropagation();
