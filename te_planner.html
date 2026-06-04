@@ -86,6 +86,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .blk.drag{opacity:.7;cursor:grabbing;z-index:100;}
 .blk.sel{outline:2px solid #fff;outline-offset:-2px;filter:brightness(1.15);}
 .btitle{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;font-size:11px;pointer-events:none;}
+.blk-note-dot{font-size:7px;opacity:.85;flex-shrink:0;pointer-events:none;line-height:1;margin-top:1px;}
 .rhandle-r{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-l{position:absolute;left:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-r:hover,.rhandle-l:hover{background:rgba(255,255,255,.4);}
@@ -594,7 +595,7 @@ function renderSidebar(){
 function renderSprints(TW,WW_){
   var row=document.getElementById('sprrow');row.innerHTML='';row.style.width=TW+'px';
   var ws=[];
-  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<pd(sv.end).getTime()+7*86400000){sp=sv;break;}}ws.push(sp);}
+  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<=pd(sv.end).getTime()){sp=sv;break;}}ws.push(sp);}
   var i=0;
   while(i<TL_WEEKS){
     if(!ws[i]){var e=document.createElement('div');e.className='spr-empty';e.style.width=WW_+'px';row.appendChild(e);i++;}
@@ -749,7 +750,7 @@ function renderBody(TW,WW_){
         var col=t.color||(primaryW?primaryW.color:row.obj.color);
         var blk=document.createElement('div');blk.className='blk'+(selectedTids.has(+t.id)?' sel':'');blk.dataset.tid=String(t.id);
         blk.style.cssText='right:'+r+'px;width:'+bw+'px;background:'+col+';'+(t.risk?'outline:2px solid #E24B4A;outline-offset:-2px;':'');
-        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+t.name+'</span><button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
+        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+t.name+'</span>'+(t.note?'<span class="blk-note-dot" title="יש הערה">●</span>':'')+'<button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
         blk.querySelector('.blk-opts').addEventListener('click',function(e){e.stopPropagation();openBlockCtx(e,t.id);});
         blk.querySelectorAll('.dep-dot').forEach(function(dot){
           dot.addEventListener('mousedown',(function(d){return function(e){e.preventDefault();e.stopPropagation();startDepDrag(e,d);};})(dot));
