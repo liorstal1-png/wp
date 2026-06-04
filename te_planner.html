@@ -953,6 +953,7 @@ function startResizeL(e,tid,blk){
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
     var minD=-(Math.ceil(diffW(pd(t.start),pd(oe)))-1);var dc=Math.max(d,minD);var ne=fd(addW(pd(oe),dc));
+    console.log('ResizeL d='+d+' minD='+minD+' dc='+dc+' ne='+ne+' oe='+oe);
     t.end=ne;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
