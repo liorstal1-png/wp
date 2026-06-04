@@ -1540,12 +1540,18 @@ function buildSummary(){
   D.groups.forEach(function(g){
     var gWeeks=0;
     var teamRows=[];
-    D.teams.filter(function(t){return t.gid===g.id;}).forEach(function(team){
-      var wids=D.workers.filter(function(w){return w.tid===team.id;}).map(function(w){return w.id;});
+    // workers via teams
+    D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
+      var wids=D.workers.filter(function(w){return +w.tid===+team.id;}).map(function(w){return w.id;});
       var tWeeks=0;
-      wids.forEach(function(wid){D.tasks.filter(function(t){return t.wid===wid;}).forEach(function(t){tWeeks+=taskWeeks(t);});});
+      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid;}).forEach(function(t){tWeeks+=taskWeeks(t);});});
       if(tWeeks>0){teamRows.push({name:team.name,weeks:tWeeks,hours:tWeeks*HPW});gWeeks+=tWeeks;}
     });
+    // workers directly in group (no team)
+    var directWids=D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).map(function(w){return w.id;});
+    var directWeeks=0;
+    directWids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid;}).forEach(function(t){directWeeks+=taskWeeks(t);});});
+    if(directWeeks>0){teamRows.push({name:'ישיר לקבוצה',weeks:directWeeks,hours:directWeeks*HPW});gWeeks+=directWeeks;}
     if(gWeeks>0){rows.push({name:g.name,weeks:gWeeks,hours:gWeeks*HPW,teams:teamRows});totalWeeks+=gWeeks;totalHours+=gWeeks*HPW;}
   });
   var html='';
@@ -1573,12 +1579,17 @@ window.exportSummaryXlsx=function exportSummaryXlsx(){
   var totalW=0,totalH=0;
   D.groups.forEach(function(g){
     var gW=0;
-    D.teams.filter(function(t){return t.gid===g.id;}).forEach(function(team){
-      var wids=D.workers.filter(function(w){return w.tid===team.id;}).map(function(w){return w.id;});
+    D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
+      var wids=D.workers.filter(function(w){return +w.tid===+team.id;}).map(function(w){return w.id;});
       var tW=0;
-      wids.forEach(function(wid){D.tasks.filter(function(t){return t.wid===wid;}).forEach(function(t){tW+=taskWeeks(t);});});
+      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid;}).forEach(function(t){tW+=taskWeeks(t);});});
       if(tW>0){wsData.push([g.name,team.name,tW,tW*HPW]);gW+=tW;}
     });
+    var dW=0;
+    D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).forEach(function(w){
+      D.tasks.filter(function(t){return +t.wid===+w.id;}).forEach(function(t){dW+=taskWeeks(t);});
+    });
+    if(dW>0){wsData.push([g.name,'ישיר לקבוצה',dW,dW*HPW]);gW+=dW;}
     if(gW>0){wsData.push([g.name,'סה"כ',gW,gW*HPW]);totalW+=gW;totalH+=gW*HPW;}
   });
   wsData.push(['','','','']);
