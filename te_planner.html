@@ -1481,8 +1481,10 @@ document.getElementById('applyRangeBtn').addEventListener('click',function(){
         var msPerSprint2=wps*7*86400000;
         var msFromStart2=TL_START.getTime()-sDate.getTime();
         var sprintIndex2=msFromStart2>0?Math.floor(msFromStart2/msPerSprint2):0;
-        var s=new Date(sDate.getTime()+sprintIndex2*msPerSprint2);
-        var n=firstN+sprintIndex2;
+        var startIndex2=Math.max(0,sprintIndex2-1);
+        var s=new Date(sDate.getTime()+startIndex2*msPerSprint2);
+        var n=firstN+startIndex2;
+        // do NOT move TL_START
         var sprints=[];var sid=1;
         while(s<tlEnd){
           var end=new Date(s.getTime()+msPerSprint2-86400000);
@@ -1660,14 +1662,15 @@ document.getElementById('modeBtn').textContent=MODE_WEEKS?'📅 תאריכים':
       var firstN=cfg.firstSprint||1;
       var sDate=new Date(cfg.startDate+'T12:00:00');
       var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
-      // find which sprint index covers TL_START, using floor division
       var msPerSprint=wps*7*86400000;
       var msFromStart=TL_START.getTime()-sDate.getTime();
+      // find sprint that contains or is just before TL_START
       var sprintIndex=msFromStart>0?Math.floor(msFromStart/msPerSprint):0;
-      var s=new Date(sDate.getTime()+sprintIndex*msPerSprint);
-      var n=firstN+sprintIndex;
-      // align TL_START to sprint start
-      TL_START=new Date(s);
+      // start generating from a bit before TL_START to cover partial sprints
+      var startIndex=Math.max(0,sprintIndex-1);
+      var s=new Date(sDate.getTime()+startIndex*msPerSprint);
+      var n=firstN+startIndex;
+      // do NOT move TL_START — sprints are date-based, timeline stays on Sunday
       var sprints=[];var sid=1;
       while(s<tlEnd){
         var end=new Date(s.getTime()+wps*7*86400000-86400000);
