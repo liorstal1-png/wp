@@ -481,9 +481,11 @@ function getRows(){
         shown[w.id]=true;
       });
     });
-    // direct workers in group (no team)
+    // direct workers in group (no team, or team not in this group)
     D.workers.filter(function(w){
-      return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));
+      if(shown[w.id])return false; // already added via team
+      if(+w.gid!==+g.id)return false;
+      return true;
     }).forEach(function(w){
       rows.push({type:'worker',obj:w});
       shown[w.id]=true;
@@ -569,7 +571,7 @@ function renderSidebar(){
 function renderSprints(TW,WW_){
   var row=document.getElementById('sprrow');row.innerHTML='';row.style.width=TW+'px';
   var ws=[];
-  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<=pd(sv.end).getTime()+6*86400000){sp=sv;break;}}ws.push(sp);}
+  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<pd(sv.end).getTime()+86400000){sp=sv;break;}}ws.push(sp);}
   var i=0;
   while(i<TL_WEEKS){
     if(!ws[i]){var e=document.createElement('div');e.className='spr-empty';e.style.width=WW_+'px';row.appendChild(e);i++;}
