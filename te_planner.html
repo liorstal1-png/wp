@@ -927,8 +927,8 @@ function startDrag(e,tid,worker,blk){
     blk.classList.remove('drag');
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
-    // normalize end to week-aligned from start
-    var span=Math.max(1,Math.round(diffW(pd(t.start),pd(t.end))));
+    // normalize end to week-aligned from start (min 0 = 1 visual week)
+    var span=Math.max(0,Math.round(diffW(pd(t.start),pd(t.end))));
     t.end=fd(addW(pd(t.start),span));
     render();
   }
