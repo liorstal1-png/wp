@@ -86,7 +86,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .blk.drag{opacity:.7;cursor:grabbing;z-index:100;}
 .blk.sel{outline:2px solid #fff;outline-offset:-2px;filter:brightness(1.15);}
 .btitle{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;font-size:11px;pointer-events:none;}
-.blk-note-dot{font-size:7px;opacity:.85;flex-shrink:0;pointer-events:none;line-height:1;margin-top:1px;}
+.blk-note-dot{font-size:11px;font-weight:700;color:#FF4444;flex-shrink:0;pointer-events:none;line-height:1;text-shadow:0 0 3px rgba(0,0,0,.3);}
 .rhandle-r{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-l{position:absolute;left:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-r:hover,.rhandle-l:hover{background:rgba(255,255,255,.4);}
@@ -430,6 +430,9 @@ function loadData(){
     if(o.collapsed){collapsed=o.collapsed;if(!collapsed.groups)collapsed.groups={};if(!collapsed.teams)collapsed.teams={};}
     if(o.MODE_WEEKS!==undefined)MODE_WEEKS=o.MODE_WEEKS;
     if(!D.groups)D.groups=[];if(!D.teams)D.teams=[];if(!D.sprints)D.sprints=[];if(!D.milestones)D.milestones=[];if(!D.nextMid)D.nextMid=1;if(!D.deps)D.deps=[];if(!D.nextDid)D.nextDid=1;
+    // always clear saved sprints so init regenerates them fresh from sprint_config
+    var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
+    if(cfg&&cfg.startDate)D.sprints=[];
     // clean orphaned deps immediately on load
     if(D.tasks&&D.deps){
       var tids=D.tasks.map(function(t){return +t.id;});
@@ -750,7 +753,7 @@ function renderBody(TW,WW_){
         var col=t.color||(primaryW?primaryW.color:row.obj.color);
         var blk=document.createElement('div');blk.className='blk'+(selectedTids.has(+t.id)?' sel':'');blk.dataset.tid=String(t.id);
         blk.style.cssText='right:'+r+'px;width:'+bw+'px;background:'+col+';'+(t.risk?'outline:2px solid #E24B4A;outline-offset:-2px;':'');
-        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+t.name+'</span>'+(t.note?'<span class="blk-note-dot" title="יש הערה">●</span>':'')+'<button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
+        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+t.name+'</span>'+(t.note?'<span class="blk-note-dot" title="יש הערה">!</span>':'')+'<button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
         blk.querySelector('.blk-opts').addEventListener('click',function(e){e.stopPropagation();openBlockCtx(e,t.id);});
         blk.querySelectorAll('.dep-dot').forEach(function(dot){
           dot.addEventListener('mousedown',(function(d){return function(e){e.preventDefault();e.stopPropagation();startDepDrag(e,d);};})(dot));
@@ -1325,6 +1328,7 @@ function openBlockCtx(e,tid){
    {sep:1},
    {l:'📝 '+(t.note?'ערוך הערה':'הוסף הערה'),f:function(){closeCtx();openNoteModal(tid);}},
    {l:t.risk?'✅ הסר סיכון':'⚠️ סיכון / נדרשת העמקה',f:function(){snapshot();t.risk=!t.risk;closeCtx();render();}},
+   {l:t.offProject?'✅ החזר לחשבון הפרויקט':'🔀 לא על חשבון הפרויקט',f:function(){snapshot();t.offProject=!t.offProject;closeCtx();render();}},
    {sep:1},
    {l:'🗑 מחק',f:function(){snapshot();D.tasks=D.tasks.filter(function(x){return x.id!==tid;});closeCtx();render();},cls:'del'}
   ].forEach(function(it){
@@ -1556,17 +1560,15 @@ function buildSummary(){
   D.groups.forEach(function(g){
     var gWeeks=0;
     var teamRows=[];
-    // workers via teams
     D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
       var wids=D.workers.filter(function(w){return +w.tid===+team.id;}).map(function(w){return w.id;});
       var tWeeks=0;
-      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid;}).forEach(function(t){tWeeks+=taskWeeks(t);});});
+      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid&&!t.offProject;}).forEach(function(t){tWeeks+=taskWeeks(t);});});
       if(tWeeks>0){teamRows.push({name:team.name,weeks:tWeeks,hours:tWeeks*HPW});gWeeks+=tWeeks;}
     });
-    // workers directly in group (no team)
     var directWids=D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).map(function(w){return w.id;});
     var directWeeks=0;
-    directWids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid;}).forEach(function(t){directWeeks+=taskWeeks(t);});});
+    directWids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid&&!t.offProject;}).forEach(function(t){directWeeks+=taskWeeks(t);});});
     if(directWeeks>0){teamRows.push({name:'ישיר לקבוצה',weeks:directWeeks,hours:directWeeks*HPW});gWeeks+=directWeeks;}
     if(gWeeks>0){rows.push({name:g.name,weeks:gWeeks,hours:gWeeks*HPW,teams:teamRows});totalWeeks+=gWeeks;totalHours+=gWeeks*HPW;}
   });
@@ -1583,6 +1585,24 @@ function buildSummary(){
   });
   html+='<div style="display:flex;justify-content:space-between;padding:10px;background:#1E3A5F;border-radius:var(--r);color:#fff;font-weight:700;font-size:13px;margin-top:8px;">';
   html+='<span>סה"כ</span><span>'+totalWeeks+' שבועות  '+totalHours+' שעות</span></div>';
+  // off-project tasks
+  var offTasks=D.tasks.filter(function(t){return t.offProject;});
+  if(offTasks.length){
+    var offWeeks=0;
+    offTasks.forEach(function(t){offWeeks+=taskWeeks(t);});
+    var offHours=offWeeks*HPW;
+    html+='<div style="margin-top:14px;border-top:2px dashed var(--brd);padding-top:10px;">';
+    html+='<div style="font-size:11px;font-weight:700;color:var(--mut);margin-bottom:6px;">לא על חשבון הפרויקט</div>';
+    offTasks.forEach(function(t){
+      var w=D.workers.find(function(x){return x.id===t.wid;});
+      var tw=taskWeeks(t);
+      html+='<div style="display:flex;justify-content:space-between;padding:5px 10px;font-size:12px;border-bottom:1px solid var(--brd);">';
+      html+='<span style="color:var(--mut);">'+(w?w.name:'')+' — '+t.name+'</span><span>'+tw+' שבועות  '+(tw*HPW)+' שעות</span></div>';
+    });
+    html+='<div style="display:flex;justify-content:space-between;padding:7px 10px;background:var(--bg);border-radius:var(--r);font-weight:700;font-size:12px;margin-top:4px;">';
+    html+='<span>סה"כ לא על חשבון</span><span style="color:var(--mut);">'+offWeeks+' שבועות  '+offHours+' שעות</span></div>';
+    html+='</div>';
+  }
   body.innerHTML=html;
 }
 
@@ -1598,18 +1618,32 @@ window.exportSummaryXlsx=function exportSummaryXlsx(){
     D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
       var wids=D.workers.filter(function(w){return +w.tid===+team.id;}).map(function(w){return w.id;});
       var tW=0;
-      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid;}).forEach(function(t){tW+=taskWeeks(t);});});
+      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid&&!t.offProject;}).forEach(function(t){tW+=taskWeeks(t);});});
       if(tW>0){wsData.push([g.name,team.name,tW,tW*HPW]);gW+=tW;}
     });
     var dW=0;
     D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).forEach(function(w){
-      D.tasks.filter(function(t){return +t.wid===+w.id;}).forEach(function(t){dW+=taskWeeks(t);});
+      D.tasks.filter(function(t){return +t.wid===+w.id&&!t.offProject;}).forEach(function(t){dW+=taskWeeks(t);});
     });
     if(dW>0){wsData.push([g.name,'ישיר לקבוצה',dW,dW*HPW]);gW+=dW;}
     if(gW>0){wsData.push([g.name,'סה"כ',gW,gW*HPW]);totalW+=gW;totalH+=gW*HPW;}
   });
   wsData.push(['','','','']);
   wsData.push(['סה"כ','',totalW,totalH]);
+  // off-project section
+  var offTasks=D.tasks.filter(function(t){return t.offProject;});
+  if(offTasks.length){
+    wsData.push(['','','','']);
+    wsData.push(['לא על חשבון הפרויקט','','','']);
+    var offTotalW=0;
+    offTasks.forEach(function(t){
+      var w=D.workers.find(function(x){return x.id===t.wid;});
+      var tw=taskWeeks(t);
+      wsData.push([(w?w.name:'')+' — '+t.name,'',tw,tw*HPW]);
+      offTotalW+=tw;
+    });
+    wsData.push(['סה"כ לא על חשבון','',offTotalW,offTotalW*HPW]);
+  }
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(wsData);
   ws['!cols']=[{wch:20},{wch:20},{wch:12},{wch:12}];
