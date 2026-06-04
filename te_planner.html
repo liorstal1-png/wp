@@ -941,8 +941,14 @@ function startResizeR(e,tid,blk){
   var os=t.start,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var maxD=Math.ceil(diffW(pd(os),pd(t.end)))-1;var dc=Math.min(d,maxD);var ns=fd(addW(pd(os),dc));
-    t.start=ns;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
+    // max d: can move start forward until span=1 week
+    var totalSpan=Math.round(diffW(pd(os),pd(t.end)));
+    var maxD=totalSpan-1;
+    d=Math.min(d,maxD);
+    var ns=fd(addW(pd(os),d));
+    t.start=ns;
+    var r=dateRight(t.start),r2=dateRight(t.end)+WW();
+    blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
   function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);render();}
@@ -955,8 +961,14 @@ function startResizeL(e,tid,blk){
   var oe=t.end,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var minD=-(Math.ceil(diffW(pd(t.start),pd(oe)))-1);var dc=Math.max(d,minD);var ne=fd(addW(pd(oe),dc));
-    t.end=ne;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.width=(r2-r-2)+'px';
+    // min d: can move end backward until span=1 week
+    var totalSpan=Math.round(diffW(pd(t.start),pd(oe)));
+    var minD=-(totalSpan-1);
+    d=Math.max(d,minD);
+    var ne=fd(addW(pd(oe),d));
+    t.end=ne;
+    var r=dateRight(t.start),r2=dateRight(t.end)+WW();
+    blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
   function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);render();}
@@ -1448,8 +1460,24 @@ function saveWorker(){
   cm('wmodal');render();
 }
 
-function openTaskModal(tid,wid,startDate){_eTid=tid||null;var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';document.getElementById('tsm-name').value=t?t.name:'';var sel=document.getElementById('tsm-worker');sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));var td=fd(TODAY);document.getElementById('tsm-start').value=t?t.start:(startDate||td);document.getElementById('tsm-end').value=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));buildColors('tsm-colors',t?t.color:null,true);
-  om('tskmodal');setTimeout(function(){document.getElementById('tsm-name').focus();},50);}
+function openTaskModal(tid,wid,startDate){
+  _eTid=tid||null;
+  var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;
+  document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';
+  document.getElementById('tsm-name').value=t?t.name:'';
+  var sel=document.getElementById('tsm-worker');
+  sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');
+  sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));
+  var td=fd(TODAY);
+  var s=t?t.start:(startDate||td);
+  var e=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));
+  document.getElementById('tsm-start').value=s;
+  document.getElementById('tsm-end').value=e;
+  document.getElementById('tsm-weeks').value=Math.max(1,Math.round(diffW(pd(s),pd(e))));
+  buildColors('tsm-colors',t?t.color:null,true);
+  om('tskmodal');
+  setTimeout(function(){document.getElementById('tsm-name').focus();},50);
+}
 function saveTask(){var name=document.getElementById('tsm-name').value.trim();var wid=parseInt(document.getElementById('tsm-worker').value);var start=document.getElementById('tsm-start').value;var end=document.getElementById('tsm-end').value;if(!name||!start||!end||end<start)return;var ce=document.querySelector('#tsm-colors .copt.on');var color=(ce&&ce.dataset.none)?null:(ce?(ce.dataset.hex||ce.style.background):null);  snapshot();
   if(_eTid){var t=D.tasks.find(function(x){return x.id===_eTid;});Object.assign(t,{name:name,wid:wid,start:start,end:end,color:color||null});}
   else D.tasks.push({id:D.nextTid++,wid:wid,name:name,start:start,end:end,color:color||null});
