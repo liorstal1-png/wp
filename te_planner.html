@@ -1508,6 +1508,8 @@ document.getElementById('applyRangeBtn').addEventListener('click',function(){
         var s=new Date(sDate);var n=firstN;
         while(new Date(s.getTime()+wps*7*86400000)<TL_START){s=new Date(s.getTime()+wps*7*86400000);n++;}
         if(n>firstN){s=new Date(s.getTime()-wps*7*86400000);n--;}
+        // align TL_START to first sprint start
+        TL_START=new Date(s);
         var sprints=[];var sid=1;
         while(s<tlEnd){
           var end=new Date(s.getTime()+wps*7*86400000-86400000);
@@ -1804,10 +1806,10 @@ window.addEventListener('keydown',function(e){
     if(!w)return;
     snapshot();
     var nt=JSON.parse(JSON.stringify(_clipboard));
-    nt.id=D.nextTid++;nt.wid=w.id;nt.color=null;
+    nt.id=D.nextTid++;nt.wid=w.id;
+    // keep original color (don't reset to null)
     // place at mouse position, keep original span
-    var span=Math.round(diffW(pd(nt.start),pd(nt.end)));
-    if(span<1)span=1;
+    var span=Math.round(diffW(pd(nt.start),pd(nt.end))); // 0 = 1 visual week
     if(_lastMouseWi!==null){
       nt.start=fd(wkDate(_lastMouseWi));
       nt.end=fd(addW(pd(nt.start),span));
