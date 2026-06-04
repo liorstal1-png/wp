@@ -1396,7 +1396,19 @@ function openWorkerModal(wid,tid){
   om('wmodal');
   setTimeout(function(){document.getElementById('wm-name').focus();},50);
 }
-function saveWorker(){var name=document.getElementById('wm-name').value.trim();if(!name)return;var tid=parseInt(document.getElementById('wm-team').value)||null;var wce2=document.querySelector('#wm-colors .copt.on');var col=wce2&&!wce2.dataset.none?(wce2.dataset.hex||wce2.style.background):COLS[0];snapshot();if(_eWid){var w=D.workers.find(function(x){return x.id===_eWid;});w.name=name;w.color=col;w.tid=tid;}else D.workers.push({id:D.nextWid++,name:name,color:col,tid:tid});cm('wmodal');render();}
+function saveWorker(){
+  var name=document.getElementById('wm-name').value.trim();if(!name)return;
+  var gid=parseInt(document.getElementById('wm-group').value)||null;
+  var tid=parseInt(document.getElementById('wm-team').value)||null;
+  // derive gid from team if not set
+  if(!gid&&tid){var t=D.teams.find(function(x){return x.id===tid;});if(t)gid=t.gid;}
+  var wce2=document.querySelector('#wm-colors .copt.on');
+  var col=wce2&&!wce2.dataset.none?(wce2.dataset.hex||wce2.style.background):COLS[0];
+  snapshot();
+  if(_eWid){var w=D.workers.find(function(x){return x.id===_eWid;});w.name=name;w.color=col;w.tid=tid;w.gid=gid;}
+  else D.workers.push({id:D.nextWid++,name:name,color:col,tid:tid,gid:gid});
+  cm('wmodal');render();
+}
 
 function openTaskModal(tid,wid,startDate){_eTid=tid||null;var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';document.getElementById('tsm-name').value=t?t.name:'';var sel=document.getElementById('tsm-worker');sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));var td=fd(TODAY);document.getElementById('tsm-start').value=t?t.start:(startDate||td);document.getElementById('tsm-end').value=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));buildColors('tsm-colors',t?t.color:null,true);
   om('tskmodal');setTimeout(function(){document.getElementById('tsm-name').focus();},50);}
