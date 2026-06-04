@@ -1394,7 +1394,19 @@ document.getElementById('sprCtxDel').addEventListener('click',function(){snapsho
 // ── COLOR PICKER ────────────────────────────────────────────────────────────
 function openCP(e,target){
   _cpTarget=target;var pop=document.getElementById('cpop');pop.innerHTML='';
-  COLS.forEach(function(col){
+  // determine palette
+  var palette=COLS;
+  if(target.type==='worker'){
+    var w=D.workers.find(function(x){return x.id===target.wid;});
+    if(w){
+      var grp=null;
+      if(w.gid)grp=D.groups.find(function(g){return +g.id===+w.gid;});
+      else if(w.tid){var tm=D.teams.find(function(t){return +t.id===+w.tid;});if(tm)grp=D.groups.find(function(g){return +g.id===+tm.gid;});}
+      var baseCol=grp&&grp.color?grp.color:w.color;
+      if(baseCol)palette=groupShades(baseCol);
+    }
+  }
+  palette.forEach(function(col){
     var sw=document.createElement('div');sw.className='copt';sw.style.background=col;
     sw.addEventListener('click',function(ev){
       ev.stopPropagation();
