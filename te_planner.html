@@ -1476,11 +1476,12 @@ function openWorkerModal(wid,tid){
   if(realTid)document.getElementById('wm-team').value=realTid;
   function refreshColors(){
     var gid=parseInt(gSel.value)||null;
-    var grp=gid?D.groups.find(function(g){return g.id===gid;}):null;
-    var grpCol=grp&&grp.color?grp.color:null;
+    var grp=gid?D.groups.find(function(g){return +g.id===gid;}):null;
+    var grpCol=grp&&grp.color?grp.color:(w&&w.color?w.color:null);
     buildColors('wm-colors',w?w.color:null,true,grpCol);
   }
-  refreshColors();
+  // call after DOM is settled
+  setTimeout(refreshColors,0);
   gSel.onchange=function(){
     var gid=parseInt(gSel.value)||null;
     refreshTeams(gid);
