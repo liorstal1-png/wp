@@ -244,9 +244,16 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
     <div class="mbody">
       <div class="fld"><label>שם משימה</label><input id="tsm-name" placeholder="שם..."/></div>
       <div class="fld"><label>עובד</label><select id="tsm-worker"></select></div>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;align-items:flex-end;">
         <div class="fld" style="flex:1"><label>התחלה</label><input id="tsm-start" type="date" oninput="updateTaskWeeks()"/></div>
-        <div class="fld" style="flex:0 0 72px"><label>שבועות</label><input type="number" id="tsm-weeks" min="1" max="52" value="2" style="direction:ltr;text-align:right;" oninput="updateTaskEnd()"/></div>
+        <div class="fld" style="flex:0 0 64px;text-align:center;">
+          <label style="display:block;">שבועות</label>
+          <div style="display:flex;align-items:center;gap:3px;">
+            <button type="button" onclick="var w=document.getElementById('tsm-weeks');w.value=Math.max(1,+w.value-1);updateTaskEnd();" style="width:22px;height:34px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);cursor:pointer;font-size:14px;padding:0;">−</button>
+            <input type="number" id="tsm-weeks" min="1" max="52" value="2" style="width:32px;text-align:center;direction:ltr;padding:6px 2px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);font-family:Heebo,sans-serif;font-size:13px;" oninput="updateTaskEnd()"/>
+            <button type="button" onclick="var w=document.getElementById('tsm-weeks');w.value=+w.value+1;updateTaskEnd();" style="width:22px;height:34px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);cursor:pointer;font-size:14px;padding:0;">+</button>
+          </div>
+        </div>
         <div class="fld" style="flex:1"><label>סיום</label><input id="tsm-end" type="date" oninput="updateTaskWeeks()"/></div>
       </div>
       <div class="fld"><label>צבע מותאם</label><div class="crow" id="tsm-colors"></div></div>
@@ -931,7 +938,7 @@ function startResizeR(e,tid,blk){
   var os=t.start,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var maxD=Math.floor(diffW(pd(os),pd(t.end)))-1;var dc=Math.min(d,maxD);var ns=fd(addW(pd(os),dc));
+    var maxD=Math.ceil(diffW(pd(os),pd(t.end)))-1;var dc=Math.min(d,maxD);var ns=fd(addW(pd(os),dc));
     t.start=ns;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
@@ -945,7 +952,7 @@ function startResizeL(e,tid,blk){
   var oe=t.end,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var minD=-(Math.floor(diffW(pd(t.start),pd(oe)))-1);var dc=Math.max(d,minD);var ne=fd(addW(pd(oe),dc));
+    var minD=-(Math.ceil(diffW(pd(t.start),pd(oe)))-1);var dc=Math.max(d,minD);var ne=fd(addW(pd(oe),dc));
     t.end=ne;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
