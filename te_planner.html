@@ -81,7 +81,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .tlrow-group .tcell:hover,.tlrow-team .tcell:hover{background:transparent;}
 
 /* blocks */
-.blk{position:absolute;top:5px;bottom:5px;border-radius:5px;cursor:grab;display:flex;align-items:center;padding:0 6px;font-size:11px;color:#fff;overflow:hidden;user-select:none;z-index:5;direction:rtl;}
+.blk{position:absolute;top:5px;bottom:5px;border-radius:5px;cursor:grab;display:flex;align-items:center;padding:0 4px;font-size:11px;color:#fff;overflow:hidden;user-select:none;z-index:5;direction:rtl;gap:2px;}
 .blk:hover{filter:brightness(1.08);z-index:10;}
 .blk.drag{opacity:.7;cursor:grabbing;z-index:100;}
 .blk.sel{outline:2px solid #fff;outline-offset:-2px;filter:brightness(1.15);}
@@ -89,11 +89,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .rhandle-r{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-l{position:absolute;left:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-r:hover,.rhandle-l:hover{background:rgba(255,255,255,.4);}
-.blk-opts{display:none;position:absolute;left:22px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.25);border:none;cursor:pointer;font-size:10px;padding:2px 4px;border-radius:3px;color:#fff;z-index:2;}
-.blk:hover .blk-opts{display:block;}
-.blk-del{display:none;position:absolute;left:2px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.25);border:none;cursor:pointer;font-size:10px;padding:2px 4px;border-radius:3px;color:#fff;z-index:2;}
-.blk:hover .blk-del{display:block;}
-.blk.sel .blk-del{display:block;}
+.blk-opts{opacity:0;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:10px;padding:1px 3px;border-radius:3px;color:#fff;flex-shrink:0;line-height:1;}
+.blk:hover .blk-opts{opacity:1;}
+.blk-del{opacity:0;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:10px;padding:1px 4px;border-radius:3px;color:#fff;flex-shrink:0;line-height:1;}
+.blk:hover .blk-del{opacity:1;}
+.blk.sel .blk-del{opacity:1;}
 /* lasso */
 .lasso{position:fixed;border:1.5px dashed var(--acc);background:rgba(55,138,221,.07);pointer-events:none;z-index:50;}
 /* sel toolbar */
