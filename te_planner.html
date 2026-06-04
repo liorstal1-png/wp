@@ -89,11 +89,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .rhandle-r{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-l{position:absolute;left:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-r:hover,.rhandle-l:hover{background:rgba(255,255,255,.4);}
-.blk-opts{opacity:0;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:10px;padding:1px 3px;border-radius:3px;color:#fff;flex-shrink:0;line-height:1;}
-.blk:hover .blk-opts{opacity:1;}
-.blk-del{opacity:0;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:10px;padding:1px 4px;border-radius:3px;color:#fff;flex-shrink:0;line-height:1;}
-.blk:hover .blk-del{opacity:1;}
-.blk.sel .blk-del{opacity:1;}
+.blk-opts{visibility:hidden;width:0;overflow:hidden;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:10px;padding:0;border-radius:3px;color:#fff;flex-shrink:0;line-height:1;}
+.blk:hover .blk-opts{visibility:visible;width:auto;padding:1px 4px;}
+.blk-del{visibility:hidden;width:0;overflow:hidden;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:10px;padding:0;border-radius:3px;color:#fff;flex-shrink:0;line-height:1;}
+.blk:hover .blk-del{visibility:visible;width:auto;padding:1px 5px;}
+.blk.sel .blk-del{visibility:visible;width:auto;padding:1px 5px;}
 /* lasso */
 .lasso{position:fixed;border:1.5px dashed var(--acc);background:rgba(55,138,221,.07);pointer-events:none;z-index:50;}
 /* sel toolbar */
