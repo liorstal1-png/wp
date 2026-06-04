@@ -245,7 +245,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
       <div class="fld"><label>שם משימה</label><input id="tsm-name" placeholder="שם..."/></div>
       <div class="fld"><label>עובד</label><select id="tsm-worker"></select></div>
       <div style="display:flex;gap:8px;align-items:flex-end;">
-        <div class="fld" style="flex:1"><label>התחלה</label><input id="tsm-start" type="date" oninput="updateTaskWeeks()"/></div>
+        <div class="fld" style="flex:1"><label>התחלה</label><input id="tsm-start" type="date" style="font-family:Heebo,sans-serif;" oninput="updateTaskWeeks()"/></div>
         <div class="fld" style="flex:0 0 64px;text-align:center;">
           <label style="display:block;">שבועות</label>
           <div style="display:flex;align-items:center;gap:3px;">
@@ -254,7 +254,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
             <button type="button" onclick="var w=document.getElementById('tsm-weeks');w.value=+w.value+1;updateTaskEnd();" style="width:22px;height:34px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);cursor:pointer;font-size:14px;padding:0;">+</button>
           </div>
         </div>
-        <div class="fld" style="flex:1"><label>סיום</label><input id="tsm-end" type="date" oninput="updateTaskWeeks()"/></div>
+        <div class="fld" style="flex:1"><label>סיום</label><input id="tsm-end" type="date" style="font-family:Heebo,sans-serif;" oninput="updateTaskWeeks()"/></div>
       </div>
       <div class="fld"><label>צבע מותאם</label><div class="crow" id="tsm-colors"></div></div>
 
@@ -942,9 +942,8 @@ function startResizeR(e,tid,blk){
   var os=t.start,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    // max d: can move start forward until span=1 week
     var totalSpan=Math.round(diffW(pd(os),pd(t.end)));
-    var maxD=totalSpan-1;
+    var maxD=totalSpan; // allow shrink to 0 diffW = 1 visual week
     d=Math.min(d,maxD);
     var ns=fd(addW(pd(os),d));
     t.start=ns;
@@ -962,9 +961,8 @@ function startResizeL(e,tid,blk){
   var oe=t.end,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    // min d: can move end backward until span=1 week
     var totalSpan=Math.round(diffW(pd(t.start),pd(oe)));
-    var minD=-(totalSpan-1);
+    var minD=-totalSpan; // allow shrink to 0 diffW = 1 visual week
     d=Math.max(d,minD);
     var ne=fd(addW(pd(oe),d));
     t.end=ne;
@@ -1471,7 +1469,7 @@ function openTaskModal(tid,wid,startDate){
   sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));
   var td=fd(TODAY);
   var s=t?t.start:(startDate||td);
-  var e=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));
+  var e=t?t.end:(startDate?fd(addW(pd(startDate),1)):fd(addW(TODAY,1)));
   document.getElementById('tsm-start').value=s;
   document.getElementById('tsm-end').value=e;
   document.getElementById('tsm-weeks').value=Math.max(1,Math.round(diffW(pd(s),pd(e)))+1);
