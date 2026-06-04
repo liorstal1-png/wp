@@ -930,7 +930,7 @@ function startResizeR(e,tid,blk){
   var os=t.start,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var ns=fd(addW(pd(os),d));if(pd(ns).getTime()>pd(t.end).getTime()-7*86400000)return;
+    var ns=fd(addW(pd(os),d));if(diffW(pd(ns),pd(t.end))<1)return;
     t.start=ns;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
@@ -944,7 +944,7 @@ function startResizeL(e,tid,blk){
   var oe=t.end,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var ne=fd(addW(pd(oe),d));if(pd(ne).getTime()<pd(t.start).getTime()+7*86400000)return;
+    var ne=fd(addW(pd(oe),d));if(diffW(pd(t.start),pd(ne))<1)return;
     t.end=ne;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
