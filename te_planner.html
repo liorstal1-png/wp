@@ -89,11 +89,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .rhandle-r{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-l{position:absolute;left:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-r:hover,.rhandle-l:hover{background:rgba(255,255,255,.4);}
-.blk-opts{opacity:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;padding:1px 4px;border-radius:3px;color:#fff;flex-shrink:0;}
-.blk:hover .blk-opts{opacity:1;}
-.blk-del{opacity:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;padding:1px 5px;border-radius:3px;color:#fff;flex-shrink:0;}
-.blk:hover .blk-del{opacity:1;}
-.blk.sel .blk-del{opacity:1;}
+.blk-opts{opacity:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;padding:1px 4px;border-radius:3px;color:#fff;position:absolute;left:20px;top:50%;transform:translateY(-50%);pointer-events:none;}
+.blk:hover .blk-opts{opacity:1;pointer-events:auto;}
+.blk-del{opacity:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;padding:1px 5px;border-radius:3px;color:#fff;position:absolute;left:2px;top:50%;transform:translateY(-50%);pointer-events:none;}
+.blk:hover .blk-del{opacity:1;pointer-events:auto;}
+.blk.sel .blk-del{opacity:1;pointer-events:auto;}
 /* lasso */
 .lasso{position:fixed;border:1.5px dashed var(--acc);background:rgba(55,138,221,.07);pointer-events:none;z-index:50;}
 /* sel toolbar */
@@ -750,7 +750,20 @@ function renderBody(TW,WW_){
         var col=t.color||(primaryW?primaryW.color:row.obj.color);
         var blk=document.createElement('div');blk.className='blk'+(selectedTids.has(+t.id)?' sel':'');blk.dataset.tid=String(t.id);
         blk.style.cssText='right:'+r+'px;width:'+bw+'px;background:'+col+';'+(t.risk?'outline:2px solid #E24B4A;outline-offset:-2px;':'');
-        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+t.name+'</span><button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
+        var _bw=bw,_name=t.name;
+        var _displayName=(function(name,width){
+          // estimate: ~7px per char at 11px font
+          var charsVisible=Math.floor((width-36)/7);
+          if(charsVisible<=0)return '';
+          if(charsVisible>=name.length)return name;
+          if(charsVisible<=2){
+            // show first letter only
+            return name.charAt(0)+'…';
+          }
+          // show truncated with ellipsis
+          return name.substring(0,charsVisible-1)+'…';
+        })(_name,_bw);
+        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+_displayName+'</span><button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
         blk.querySelector('.blk-opts').addEventListener('click',function(e){e.stopPropagation();openBlockCtx(e,t.id);});
         blk.querySelectorAll('.dep-dot').forEach(function(dot){
           dot.addEventListener('mousedown',(function(d){return function(e){e.preventDefault();e.stopPropagation();startDepDrag(e,d);};})(dot));
