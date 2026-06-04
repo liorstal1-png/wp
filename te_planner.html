@@ -721,7 +721,7 @@ function renderBody(TW,WW_){
         var primaryW=D.workers.find(function(w){return w.id===t.wid;});
         var col=t.color||(primaryW?primaryW.color:row.obj.color);
         var blk=document.createElement('div');blk.className='blk'+(selectedTids.has(+t.id)?' sel':'');blk.dataset.tid=String(t.id);
-        blk.style.cssText='right:'+r+'px;width:'+bw+'px;background:'+col+';';
+        blk.style.cssText='right:'+r+'px;width:'+bw+'px;background:'+col+';'+(t.risk?'outline:2px solid #E24B4A;outline-offset:-2px;':'');
         blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+t.name+'</span><button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
         blk.querySelector('.blk-opts').addEventListener('click',function(e){e.stopPropagation();openBlockCtx(e,t.id);});
         blk.querySelectorAll('.dep-dot').forEach(function(dot){
@@ -904,7 +904,7 @@ function startResizeR(e,tid,blk){
   var os=t.start,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var ns=fd(addW(pd(os),d));if(ns>=t.end)return;
+    var ns=fd(addW(pd(os),d));if(pd(ns).getTime()>=pd(t.end).getTime()-6*86400000)return;
     t.start=ns;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
@@ -918,7 +918,7 @@ function startResizeL(e,tid,blk){
   var oe=t.end,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var ne=fd(addW(pd(oe),d));if(ne<=t.start)return;
+    var ne=fd(addW(pd(oe),d));if(pd(ne).getTime()<=pd(t.start).getTime()+6*86400000)return;
     t.end=ne;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
@@ -1283,12 +1283,12 @@ function openBlockCtx(e,tid){
   });
   [{l:'✏️ ערוך',f:function(){closeCtx();openTaskModal(tid);}},
    {l:'🎨 צבע',f:function(ev){closeCtx();openCP(ev,{type:'task',tid:tid});}},
-   {l:'↩ אפס צבע',f:function(){t.color=null;closeCtx();render();}},
-   {sep:1}
-  ].concat(dupItems).concat([
+   {l:'↩ אפס צבע',f:function(){t.color=null;t.risk=false;closeCtx();render();}},
+   {sep:1},
+   {l:t.risk?'✅ הסר סיכון':'⚠️ סיכון / נדרשת העמקה',f:function(){snapshot();t.risk=!t.risk;closeCtx();render();}},
    {sep:1},
    {l:'🗑 מחק',f:function(){snapshot();D.tasks=D.tasks.filter(function(x){return x.id!==tid;});closeCtx();render();},cls:'del'}
-  ]).forEach(function(it){
+  ].forEach(function(it){
     if(it.sep){var s=document.createElement('div');s.className='ci-sep';menu.appendChild(s);return;}
     var d=document.createElement('div');d.className='ci'+(it.cls?' '+it.cls:'');d.textContent=it.l;d.addEventListener('click',function(ev){it.f(ev);});menu.appendChild(d);
   });
