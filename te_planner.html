@@ -430,9 +430,8 @@ function loadData(){
     if(o.collapsed){collapsed=o.collapsed;if(!collapsed.groups)collapsed.groups={};if(!collapsed.teams)collapsed.teams={};}
     if(o.MODE_WEEKS!==undefined)MODE_WEEKS=o.MODE_WEEKS;
     if(!D.groups)D.groups=[];if(!D.teams)D.teams=[];if(!D.sprints)D.sprints=[];if(!D.milestones)D.milestones=[];if(!D.nextMid)D.nextMid=1;if(!D.deps)D.deps=[];if(!D.nextDid)D.nextDid=1;
-    // always clear saved sprints so init regenerates them fresh from sprint_config
-    var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
-    if(cfg&&cfg.startDate)D.sprints=[];
+    // sprints are computed on-the-fly — clear any stale saved ones
+    D.sprints=[];
     // clean orphaned deps immediately on load
     if(D.tasks&&D.deps){
       var tids=D.tasks.map(function(t){return +t.id;});
@@ -595,14 +594,65 @@ function renderSidebar(){
   });
 }
 
+// ── SPRINT HELPERS ─────────────────────────────────────────────────────────
+// Returns sprint object for a given week index, purely by math — no loops, no cache issues.
+function getSprintForWeek(weekIndex){
+  var cfg;
+  try{cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');}catch(e){cfg={};}
+  if(!cfg||!cfg.startDate)return null;
+  var wps=cfg.weeksPerSprint||3;
+  var firstN=cfg.firstSprint||1;
+  var sDate=new Date(cfg.startDate+'T12:00:00');
+  var msPerSprint=wps*7*86400000;
+  var weekStart=wkDate(weekIndex); // already has hours:12 from addW
+  var msDiff=weekStart.getTime()-sDate.getTime();
+  if(msDiff<0)return null; // before first sprint
+  var idx=Math.floor(msDiff/msPerSprint);
+  var sprintStart=new Date(sDate.getTime()+idx*msPerSprint);
+  var sprintEnd=new Date(sprintStart.getTime()+msPerSprint-86400000);
+  return {
+    id:idx+1,
+    name:'Sprint '+(firstN+idx),
+    start:fd(sprintStart),
+    end:fd(sprintEnd),
+    _idx:idx
+  };
+}
+
 function renderSprints(TW,WW_){
   var row=document.getElementById('sprrow');row.innerHTML='';row.style.width=TW+'px';
+  // build per-week sprint array using pure math
   var ws=[];
-  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<=pd(sv.end).getTime()){sp=sv;break;}}ws.push(sp);}
+  var cfg;
+  try{cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');}catch(e){cfg={};}
+  var hasConfig=cfg&&cfg.startDate;
+  for(var i=0;i<TL_WEEKS;i++){
+    if(hasConfig){
+      ws.push(getSprintForWeek(i));
+    } else {
+      // fall back to manual sprints in D.sprints
+      var wd=wkDate(i).getTime(),sp=null;
+      for(var si=0;si<D.sprints.length;si++){
+        var sv=D.sprints[si];
+        if(wd>=pd(sv.start).getTime()&&wd<=pd(sv.end).getTime()){sp=sv;break;}
+      }
+      ws.push(sp);
+    }
+  }
   var i=0;
   while(i<TL_WEEKS){
     if(!ws[i]){var e=document.createElement('div');e.className='spr-empty';e.style.width=WW_+'px';row.appendChild(e);i++;}
-    else{var sp=ws[i],s0=i;while(i<TL_WEEKS&&ws[i]&&ws[i].id===sp.id)i++;var cnt=i-s0;var wrap=document.createElement('div');wrap.className='spr-block';wrap.style.width=(cnt*WW_)+'px';var inn=document.createElement('div');inn.className='spr-inner';inn.style.width=(cnt*WW_-2)+'px';var nm=document.createElement('span');nm.textContent=sp.name;var dl=document.createElement('button');dl.className='spr-del';dl.textContent='🗑';inn.appendChild(nm);inn.appendChild(dl);(function(s){inn.addEventListener('click',function(e){e.stopPropagation();openSprCtx(e,s.id);});dl.addEventListener('click',function(e){e.stopPropagation();snapshot();D.sprints=D.sprints.filter(function(x){return x.id!==s.id;});render();});})(sp);wrap.appendChild(inn);row.appendChild(wrap);}
+    else{
+      var sp=ws[i],s0=i;
+      while(i<TL_WEEKS&&ws[i]&&ws[i]._idx===sp._idx)i++;
+      var cnt=i-s0;
+      var wrap=document.createElement('div');wrap.className='spr-block';wrap.style.width=(cnt*WW_)+'px';
+      var inn=document.createElement('div');inn.className='spr-inner';inn.style.width=(cnt*WW_-2)+'px';
+      var nm=document.createElement('span');nm.textContent=sp.name;
+      inn.appendChild(nm);
+      wrap.appendChild(inn);
+      row.appendChild(wrap);
+    }
   }
 }
 
@@ -1474,32 +1524,7 @@ document.getElementById('applyRangeBtn').addEventListener('click',function(){
   if(w>200)w=200;
   if(sVal&&sVal.length===10)TL_START=sundayBefore(pd(sVal));
   TL_WEEKS=w;
-  // regenerate sprints for new range
-  (function(){
-    try{
-      var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
-      if(cfg&&cfg.startDate){
-        var wps=cfg.weeksPerSprint||3;
-        var firstN=cfg.firstSprint||1;
-        var sDate=new Date(cfg.startDate+'T12:00:00');
-        var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
-        var msPerSprint2=wps*7*86400000;
-        var msFromStart2=TL_START.getTime()-sDate.getTime();
-        var sprintIndex2=msFromStart2>0?Math.floor(msFromStart2/msPerSprint2):0;
-        var startIndex2=Math.max(0,sprintIndex2-1);
-        var s=new Date(sDate.getTime()+startIndex2*msPerSprint2);
-        var n=firstN+startIndex2;
-        // do NOT move TL_START
-        var sprints=[];var sid=1;
-        while(s<tlEnd){
-          var end=new Date(s.getTime()+msPerSprint2-86400000);
-          sprints.push({id:sid++,name:'Sprint '+n,start:fd(s),end:fd(end)});
-          s=new Date(s.getTime()+msPerSprint2);n++;
-        }
-        D.sprints=sprints;D.nextSid=sprints.length+1;
-      }
-    }catch(e){}
-  })();
+  // sprints are now computed on-the-fly in renderSprints — nothing to regenerate
   // Auto-fit zoom so the full range fills the available width
   var tlwrap=document.getElementById('tlwrap');
   var availW=tlwrap.clientWidth||800;
@@ -1688,35 +1713,7 @@ var _pt=sessionStorage.getItem('te_active_pname');
 if(_pt){var _tel=document.getElementById('plannerTitle');if(_tel)_tel.textContent='📋 '+_pt;}
 
 document.getElementById('modeBtn').textContent=MODE_WEEKS?'📅 תאריכים':'🔢 שבועות';
-// auto-generate sprints
-(function(){
-  try{
-    var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
-    if(cfg&&cfg.startDate){
-      var wps=cfg.weeksPerSprint||3;
-      var firstN=cfg.firstSprint||1;
-      var sDate=new Date(cfg.startDate+'T12:00:00');
-      var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
-      var msPerSprint=wps*7*86400000;
-      var msFromStart=TL_START.getTime()-sDate.getTime();
-      // find sprint that contains or is just before TL_START
-      var sprintIndex=msFromStart>0?Math.floor(msFromStart/msPerSprint):0;
-      // start generating from a bit before TL_START to cover partial sprints
-      var startIndex=Math.max(0,sprintIndex-1);
-      var s=new Date(sDate.getTime()+startIndex*msPerSprint);
-      var n=firstN+startIndex;
-      // do NOT move TL_START — sprints are date-based, timeline stays on Sunday
-      var sprints=[];var sid=1;
-      while(s<tlEnd){
-        var end=new Date(s.getTime()+wps*7*86400000-86400000);
-        sprints.push({id:sid++,name:'Sprint '+n,start:fd(s),end:fd(end)});
-        s=new Date(s.getTime()+wps*7*86400000);n++;
-      }
-      D.sprints=sprints;
-      D.nextSid=sprints.length+1;
-    }
-  }catch(e){}
-})();
+// sprints computed on-the-fly by getSprintForWeek() — no init needed
 
 render();
 setTimeout(function(){document.getElementById('tlwrap').scrollLeft=0;},100);
