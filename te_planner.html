@@ -461,9 +461,17 @@ function getRows(){
   safeCollapsed();
   var rows=[];
   var shown={};
+  // First pass: claim all workers that belong to a group
+  var claimed={};
+  D.groups.forEach(function(g){
+    D.workers.filter(function(w){return +w.gid===+g.id;}).forEach(function(w){claimed[w.id]=true;});
+    D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(t){
+      D.workers.filter(function(w){return +w.tid===+t.id;}).forEach(function(w){claimed[w.id]=true;});
+    });
+  });
+  // Second pass: build rows
   D.groups.forEach(function(g){
     rows.push({type:'group',obj:g});
-    // if group collapsed, skip all children
     if(collapsed.groups[g.id])return;
     D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(t){
       rows.push({type:'team',obj:t});
@@ -473,17 +481,16 @@ function getRows(){
         shown[w.id]=true;
       });
     });
+    // direct workers in group (no team)
     D.workers.filter(function(w){
-      if(shown[w.id])return false;
-      if(+w.gid!==+g.id)return false;
-      return !w.tid||!D.teams.find(function(t){return +t.id===+w.tid;});
+      return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));
     }).forEach(function(w){
       rows.push({type:'worker',obj:w});
       shown[w.id]=true;
     });
   });
   // workers not yet shown
-  D.workers.filter(function(w){return !shown[w.id];}).forEach(function(w){
+  D.workers.filter(function(w){return !claimed[w.id]&&!shown[w.id];}).forEach(function(w){
     rows.push({type:'worker',obj:w});
   });
   return rows;
