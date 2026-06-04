@@ -81,19 +81,19 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .tlrow-group .tcell:hover,.tlrow-team .tcell:hover{background:transparent;}
 
 /* blocks */
-.blk{position:absolute;top:5px;bottom:5px;border-radius:5px;cursor:grab;display:flex;align-items:center;padding:0 4px;font-size:11px;color:#fff;overflow:hidden;user-select:none;z-index:5;direction:rtl;gap:2px;}
+.blk{position:absolute;top:5px;bottom:5px;border-radius:5px;cursor:grab;display:flex;align-items:center;padding:0 8px;font-size:11px;color:#fff;overflow:hidden;user-select:none;z-index:5;direction:rtl;gap:3px;}
 .blk:hover{filter:brightness(1.08);z-index:10;}
 .blk.drag{opacity:.7;cursor:grabbing;z-index:100;}
 .blk.sel{outline:2px solid #fff;outline-offset:-2px;filter:brightness(1.15);}
-.btitle{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;font-size:11px;pointer-events:none;width:100%;}
+.btitle{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;font-size:11px;pointer-events:none;}
 .rhandle-r{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-l{position:absolute;left:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-r:hover,.rhandle-l:hover{background:rgba(255,255,255,.4);}
-.blk-opts{visibility:hidden;width:0;overflow:hidden;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:10px;padding:0;border-radius:3px;color:#fff;flex-shrink:0;line-height:1;}
-.blk:hover .blk-opts{visibility:visible;width:auto;padding:1px 4px;}
-.blk-del{visibility:hidden;width:0;overflow:hidden;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:10px;padding:0;border-radius:3px;color:#fff;flex-shrink:0;line-height:1;}
-.blk:hover .blk-del{visibility:visible;width:auto;padding:1px 5px;}
-.blk.sel .blk-del{visibility:visible;width:auto;padding:1px 5px;}
+.blk-opts{opacity:0;width:0;overflow:hidden;padding:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;border-radius:3px;color:#fff;flex-shrink:0;transition:opacity .1s;}
+.blk:hover .blk-opts{opacity:1;width:auto;padding:1px 4px;}
+.blk-del{opacity:0;width:0;overflow:hidden;padding:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;border-radius:3px;color:#fff;flex-shrink:0;transition:opacity .1s;}
+.blk:hover .blk-del{opacity:1;width:auto;padding:1px 5px;}
+.blk.sel .blk-del{opacity:1;width:auto;padding:1px 5px;}
 /* lasso */
 .lasso{position:fixed;border:1.5px dashed var(--acc);background:rgba(55,138,221,.07);pointer-events:none;z-index:50;}
 /* sel toolbar */
@@ -109,7 +109,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.25);backdrop-filter:blur(2px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;direction:rtl;}
 .ov.open{display:flex;animation:fi .15s;}
 @keyframes fi{from{opacity:0}to{opacity:1}}
-.modal{background:var(--sur);border-radius:12px;border:1px solid var(--brd);width:100%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,.18);animation:pi .18s cubic-bezier(.34,1.56,.64,1);overflow:hidden;}
+.modal{background:var(--sur);border-radius:12px;border:1px solid var(--brd);width:100%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,.18);animation:pi .18s cubic-bezier(.34,1.56,.64,1);}
 @keyframes pi{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
 .mhdr{padding:.8rem 1rem .6rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;}
 .mtitle{font-size:14px;font-weight:700;}
@@ -244,17 +244,17 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
     <div class="mbody">
       <div class="fld"><label>שם משימה</label><input id="tsm-name" placeholder="שם..."/></div>
       <div class="fld"><label>עובד</label><select id="tsm-worker"></select></div>
-      <div style="display:flex;gap:6px;align-items:flex-end;">
-        <div class="fld" style="flex:1;min-width:0;"><label>התחלה</label><input id="tsm-start" type="date" style="font-family:Heebo,sans-serif;font-size:12px;padding:6px 5px;width:100%;" oninput="updateTaskWeeks()"/></div>
-        <div class="fld" style="flex:0 0 auto;text-align:center;">
-          <label style="display:block;font-size:11px;">שבועות</label>
-          <div style="display:flex;align-items:center;gap:2px;">
-            <button type="button" onclick="var w=document.getElementById('tsm-weeks');w.value=Math.max(1,+w.value-1);updateTaskEnd();" style="width:20px;height:32px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);cursor:pointer;font-size:13px;padding:0;flex-shrink:0;">−</button>
-            <input type="number" id="tsm-weeks" min="1" max="52" value="2" style="width:30px;text-align:center;direction:ltr;padding:5px 2px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);font-family:Heebo,sans-serif;font-size:13px;" oninput="updateTaskEnd()"/>
-            <button type="button" onclick="var w=document.getElementById('tsm-weeks');w.value=+w.value+1;updateTaskEnd();" style="width:20px;height:32px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);cursor:pointer;font-size:13px;padding:0;flex-shrink:0;">+</button>
+      <div style="display:flex;gap:8px;align-items:flex-end;">
+        <div class="fld" style="flex:1"><label>התחלה</label><input id="tsm-start" type="date" oninput="updateTaskWeeks()"/></div>
+        <div class="fld" style="flex:0 0 64px;text-align:center;">
+          <label style="display:block;">שבועות</label>
+          <div style="display:flex;align-items:center;gap:3px;">
+            <button type="button" onclick="var w=document.getElementById('tsm-weeks');w.value=Math.max(1,+w.value-1);updateTaskEnd();" style="width:22px;height:34px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);cursor:pointer;font-size:14px;padding:0;">−</button>
+            <input type="number" id="tsm-weeks" min="1" max="52" value="2" style="width:32px;text-align:center;direction:ltr;padding:6px 2px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);font-family:Heebo,sans-serif;font-size:13px;" oninput="updateTaskEnd()"/>
+            <button type="button" onclick="var w=document.getElementById('tsm-weeks');w.value=+w.value+1;updateTaskEnd();" style="width:22px;height:34px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);cursor:pointer;font-size:14px;padding:0;">+</button>
           </div>
         </div>
-        <div class="fld" style="flex:1;min-width:0;"><label>סיום</label><input id="tsm-end" type="date" style="font-family:Heebo,sans-serif;font-size:12px;padding:6px 5px;width:100%;" oninput="updateTaskWeeks()"/></div>
+        <div class="fld" style="flex:1"><label>סיום</label><input id="tsm-end" type="date" oninput="updateTaskWeeks()"/></div>
       </div>
       <div class="fld"><label>צבע מותאם</label><div class="crow" id="tsm-colors"></div></div>
 
@@ -352,7 +352,6 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 <div class="rollup-tip" id="rollupTip"></div>
 <div class="dep-del-btn" id="depDelBtn">✕</div>
 <script>
-/* v2026.06.04 */
 function groupShades(base){
   if(!base)return COLS;
   var shades=[];
@@ -392,7 +391,7 @@ function undo(){
   clearSel();render();toast('↩ ביטול פעולה');
 }
 
-function pd(s){var p=s.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2],12,0,0,0));}
+function pd(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2],12,0,0,0);}
 function fd(dt){var y=dt.getFullYear(),m=dt.getMonth()+1,d=dt.getDate();return y+'-'+(m<10?'0':'')+m+'-'+(d<10?'0':'')+d;}
 function addW(dt,n){return new Date(dt.getTime()+n*7*86400000);}
 function addD(dt,n){return new Date(dt.getTime()+n*86400000);}
@@ -595,7 +594,7 @@ function renderSidebar(){
 function renderSprints(TW,WW_){
   var row=document.getElementById('sprrow');row.innerHTML='';row.style.width=TW+'px';
   var ws=[];
-  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<pd(sv.end).getTime()+86400000){sp=sv;break;}}ws.push(sp);}
+  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<pd(sv.end).getTime()+7*86400000){sp=sv;break;}}ws.push(sp);}
   var i=0;
   while(i<TL_WEEKS){
     if(!ws[i]){var e=document.createElement('div');e.className='spr-empty';e.style.width=WW_+'px';row.appendChild(e);i++;}
@@ -750,20 +749,7 @@ function renderBody(TW,WW_){
         var col=t.color||(primaryW?primaryW.color:row.obj.color);
         var blk=document.createElement('div');blk.className='blk'+(selectedTids.has(+t.id)?' sel':'');blk.dataset.tid=String(t.id);
         blk.style.cssText='right:'+r+'px;width:'+bw+'px;background:'+col+';'+(t.risk?'outline:2px solid #E24B4A;outline-offset:-2px;':'');
-        var _bw=bw,_name=t.name;
-        var _displayName=(function(name,width){
-          // estimate: ~7px per char at 11px font
-          var charsVisible=Math.floor((width-36)/7);
-          if(charsVisible<=0)return '';
-          if(charsVisible>=name.length)return name;
-          if(charsVisible<=2){
-            // show first letter only
-            return name.charAt(0)+'…';
-          }
-          // show truncated with ellipsis
-          return name.substring(0,charsVisible-1)+'…';
-        })(_name,_bw);
-        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+_displayName+'</span><button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
+        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+t.name+'</span><button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
         blk.querySelector('.blk-opts').addEventListener('click',function(e){e.stopPropagation();openBlockCtx(e,t.id);});
         blk.querySelectorAll('.dep-dot').forEach(function(dot){
           dot.addEventListener('mousedown',(function(d){return function(e){e.preventDefault();e.stopPropagation();startDepDrag(e,d);};})(dot));
@@ -940,8 +926,8 @@ function startDrag(e,tid,worker,blk){
     blk.classList.remove('drag');
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
-    // normalize end to week-aligned from start (min 0 = 1 visual week)
-    var span=Math.max(0,Math.round(diffW(pd(t.start),pd(t.end))));
+    // normalize end to week-aligned from start
+    var span=Math.max(1,Math.round(diffW(pd(t.start),pd(t.end))));
     t.end=fd(addW(pd(t.start),span));
     render();
   }
@@ -955,13 +941,8 @@ function startResizeR(e,tid,blk){
   var os=t.start,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var totalSpan=Math.round(diffW(pd(os),pd(t.end)));
-    var maxD=totalSpan; // allow shrink to 0 diffW = 1 visual week
-    d=Math.min(d,maxD);
-    var ns=fd(addW(pd(os),d));
-    t.start=ns;
-    var r=dateRight(t.start),r2=dateRight(t.end)+WW();
-    blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
+    var maxD=Math.ceil(diffW(pd(os),pd(t.end)))-1;var dc=Math.min(d,maxD);var ns=fd(addW(pd(os),dc));
+    t.start=ns;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
   function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);render();}
@@ -974,13 +955,8 @@ function startResizeL(e,tid,blk){
   var oe=t.end,sx=e.clientX;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var totalSpan=Math.round(diffW(pd(t.start),pd(oe)));
-    var minD=-totalSpan; // allow shrink to 0 diffW = 1 visual week
-    d=Math.max(d,minD);
-    var ne=fd(addW(pd(oe),d));
-    t.end=ne;
-    var r=dateRight(t.start),r2=dateRight(t.end)+WW();
-    blk.style.width=(r2-r-2)+'px';
+    var minD=-(Math.ceil(diffW(pd(t.start),pd(oe)))-1);var dc=Math.max(d,minD);var ne=fd(addW(pd(oe),dc));
+    t.end=ne;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.width=(r2-r-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
   function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);render();}
@@ -1363,17 +1339,7 @@ document.getElementById('sprCtxDel').addEventListener('click',function(){snapsho
 // ── COLOR PICKER ────────────────────────────────────────────────────────────
 function openCP(e,target){
   _cpTarget=target;var pop=document.getElementById('cpop');pop.innerHTML='';
-  // use group shades if target is a worker with a group color
-  var palette=COLS;
-  if(target.type==='worker'){
-    var w=D.workers.find(function(x){return x.id===target.wid;});
-    if(w&&w.gid){
-      var g=D.groups.find(function(x){return x.id===w.gid;});
-      if(!g&&w.tid){var t=D.teams.find(function(x){return x.id===w.tid;});if(t)g=D.groups.find(function(x){return x.id===t.gid;});}
-      if(g&&g.color)palette=groupShades(g.color);
-    }
-  }
-  palette.forEach(function(col){
+  COLS.forEach(function(col){
     var sw=document.createElement('div');sw.className='copt';sw.style.background=col;
     sw.addEventListener('click',function(ev){
       ev.stopPropagation();
@@ -1482,24 +1448,8 @@ function saveWorker(){
   cm('wmodal');render();
 }
 
-function openTaskModal(tid,wid,startDate){
-  _eTid=tid||null;
-  var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;
-  document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';
-  document.getElementById('tsm-name').value=t?t.name:'';
-  var sel=document.getElementById('tsm-worker');
-  sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');
-  sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));
-  var td=fd(TODAY);
-  var s=t?t.start:(startDate||td);
-  var e=t?t.end:(startDate?fd(addW(pd(startDate),1)):fd(addW(TODAY,1)));
-  document.getElementById('tsm-start').value=s;
-  document.getElementById('tsm-end').value=e;
-  document.getElementById('tsm-weeks').value=Math.max(1,Math.round(diffW(pd(s),pd(e)))+1);
-  buildColors('tsm-colors',t?t.color:null,true);
-  om('tskmodal');
-  setTimeout(function(){document.getElementById('tsm-name').focus();},50);
-}
+function openTaskModal(tid,wid,startDate){_eTid=tid||null;var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';document.getElementById('tsm-name').value=t?t.name:'';var sel=document.getElementById('tsm-worker');sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));var td=fd(TODAY);document.getElementById('tsm-start').value=t?t.start:(startDate||td);document.getElementById('tsm-end').value=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));buildColors('tsm-colors',t?t.color:null,true);
+  om('tskmodal');setTimeout(function(){document.getElementById('tsm-name').focus();},50);}
 function saveTask(){var name=document.getElementById('tsm-name').value.trim();var wid=parseInt(document.getElementById('tsm-worker').value);var start=document.getElementById('tsm-start').value;var end=document.getElementById('tsm-end').value;if(!name||!start||!end||end<start)return;var ce=document.querySelector('#tsm-colors .copt.on');var color=(ce&&ce.dataset.none)?null:(ce?(ce.dataset.hex||ce.style.background):null);  snapshot();
   if(_eTid){var t=D.tasks.find(function(x){return x.id===_eTid;});Object.assign(t,{name:name,wid:wid,start:start,end:end,color:color||null});}
   else D.tasks.push({id:D.nextTid++,wid:wid,name:name,start:start,end:end,color:color||null});
@@ -1526,18 +1476,18 @@ document.getElementById('applyRangeBtn').addEventListener('click',function(){
       if(cfg&&cfg.startDate){
         var wps=cfg.weeksPerSprint||3;
         var firstN=cfg.firstSprint||1;
-        var sDate=new Date(cfg.startDate+'T00:00:00Z');
+        var sDate=new Date(cfg.startDate+'T12:00:00');
         var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
-        var s=new Date(sDate);var n=firstN;
-        var tlStartUTC2=new Date(Date.UTC(TL_START.getUTCFullYear(),TL_START.getUTCMonth(),TL_START.getUTCDate()));
-        while(new Date(s.getTime()+wps*7*86400000)<=tlStartUTC2){s=new Date(s.getTime()+wps*7*86400000);n++;}
-        // align TL_START to first sprint start
-        TL_START=new Date(s);
+        var msPerSprint2=wps*7*86400000;
+        var msFromStart2=TL_START.getTime()-sDate.getTime();
+        var sprintIndex2=msFromStart2>0?Math.floor(msFromStart2/msPerSprint2):0;
+        var s=new Date(sDate.getTime()+sprintIndex2*msPerSprint2);
+        var n=firstN+sprintIndex2;
         var sprints=[];var sid=1;
         while(s<tlEnd){
-          var end=new Date(s.getTime()+wps*7*86400000-86400000);
+          var end=new Date(s.getTime()+msPerSprint2-86400000);
           sprints.push({id:sid++,name:'Sprint '+n,start:fd(s),end:fd(end)});
-          s=new Date(s.getTime()+wps*7*86400000);n++;
+          s=new Date(s.getTime()+msPerSprint2);n++;
         }
         D.sprints=sprints;D.nextSid=sprints.length+1;
       }
@@ -1688,10 +1638,10 @@ if(!loadData()){
   D.teams=[{id:1,name:'צוות Backend',gid:1},{id:2,name:'צוות Frontend',gid:1},{id:3,name:'UX',gid:2}];
   D.workers=[{id:1,name:'אלון כהן',color:'#378ADD',tid:1},{id:2,name:'מיכל לוי',color:'#1D9E75',tid:2},{id:3,name:'דוד מזרחי',color:'#D85A30',tid:3}];
   D.tasks=[
-    {id:101,wid:1,name:'ארכיטקטורה',start:fd(sundayBefore(addD(TODAY,-5))),end:fd(addW(sundayBefore(addD(TODAY,-5)),2)),color:null},
-    {id:102,wid:1,name:'בדיקות',start:fd(sundayBefore(addD(TODAY,14))),end:fd(addW(sundayBefore(addD(TODAY,14)),1)),color:null},
-    {id:103,wid:2,name:'פיתוח Frontend',start:fd(sundayBefore(addD(TODAY,-3))),end:fd(addW(sundayBefore(addD(TODAY,-3)),2)),color:null},
-    {id:104,wid:3,name:'עיצוב UI',start:fd(sundayBefore(addD(TODAY,7))),end:fd(addW(sundayBefore(addD(TODAY,7)),1)),color:null},
+    {id:101,wid:1,name:'ארכיטקטורה',start:fd(addD(TODAY,-5)),end:fd(addD(TODAY,9)),color:null},
+    {id:102,wid:1,name:'בדיקות',start:fd(addD(TODAY,14)),end:fd(addD(TODAY,21)),color:null},
+    {id:103,wid:2,name:'פיתוח Frontend',start:fd(addD(TODAY,-3)),end:fd(addD(TODAY,11)),color:null},
+    {id:104,wid:3,name:'עיצוב UI',start:fd(addD(TODAY,7)),end:fd(addD(TODAY,18)),color:null},
   ];
   D.sprints=[]; // auto-generated from sprint config
   D.nextGid=10;D.nextTmid=10;D.nextWid=10;D.nextSid=3;D.milestones=[];D.deps=[];
@@ -1708,13 +1658,14 @@ document.getElementById('modeBtn').textContent=MODE_WEEKS?'📅 תאריכים':
     if(cfg&&cfg.startDate){
       var wps=cfg.weeksPerSprint||3;
       var firstN=cfg.firstSprint||1;
-      var sDate=new Date(cfg.startDate+'T00:00:00Z');
+      var sDate=new Date(cfg.startDate+'T12:00:00');
       var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
-      var s=new Date(sDate);
-      var n=firstN;
-      // normalize TL_START to UTC midnight for comparison
-      var tlStartUTC=new Date(Date.UTC(TL_START.getUTCFullYear(),TL_START.getUTCMonth(),TL_START.getUTCDate()));
-      while(new Date(s.getTime()+wps*7*86400000)<=tlStartUTC){s=new Date(s.getTime()+wps*7*86400000);n++;}
+      // find which sprint index covers TL_START, using floor division
+      var msPerSprint=wps*7*86400000;
+      var msFromStart=TL_START.getTime()-sDate.getTime();
+      var sprintIndex=msFromStart>0?Math.floor(msFromStart/msPerSprint):0;
+      var s=new Date(sDate.getTime()+sprintIndex*msPerSprint);
+      var n=firstN+sprintIndex;
       // align TL_START to sprint start
       TL_START=new Date(s);
       var sprints=[];var sid=1;
@@ -1778,13 +1729,13 @@ window.saveNote=saveNote;
 function updateTaskEnd(){
   var s=document.getElementById('tsm-start').value;
   var w=parseInt(document.getElementById('tsm-weeks').value)||1;
-  if(s){document.getElementById('tsm-end').value=fd(addW(pd(s),w-1));}
+  if(s){document.getElementById('tsm-end').value=fd(addW(pd(s),w));}
 }
 function updateTaskWeeks(){
   var s=document.getElementById('tsm-start').value;
   var e=document.getElementById('tsm-end').value;
   if(s&&e){
-    var w=Math.max(1,Math.round(diffW(pd(s),pd(e)))+1);
+    var w=Math.max(1,Math.round(diffW(pd(s),pd(e))));
     document.getElementById('tsm-weeks').value=w;
   }
 }
@@ -1830,10 +1781,10 @@ window.addEventListener('keydown',function(e){
     if(!w)return;
     snapshot();
     var nt=JSON.parse(JSON.stringify(_clipboard));
-    nt.id=D.nextTid++;nt.wid=w.id;
-    // keep original color (don't reset to null)
+    nt.id=D.nextTid++;nt.wid=w.id;nt.color=null;
     // place at mouse position, keep original span
-    var span=Math.round(diffW(pd(nt.start),pd(nt.end))); // 0 = 1 visual week
+    var span=Math.round(diffW(pd(nt.start),pd(nt.end)));
+    if(span<1)span=1;
     if(_lastMouseWi!==null){
       nt.start=fd(wkDate(_lastMouseWi));
       nt.end=fd(addW(pd(nt.start),span));
