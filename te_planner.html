@@ -720,17 +720,27 @@ function getRollupColor(row){
 
 function renderBody(TW,WW_){
   var tb=document.getElementById('tlbody');tb.innerHTML='';tb.style.width=TW+'px';
-  // sprint divider lines
+  // sprint divider lines — use absolute divs for pixel-perfect RTL alignment
   try{
+    tb.style.backgroundImage='none';
     var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
     if(cfg&&cfg.startDate){
-      var sprintW=(cfg.weeksPerSprint||3)*WW_;
-      tb.style.backgroundImage='repeating-linear-gradient(to left, #D0CEC8 0px, #D0CEC8 1px, transparent 1px, transparent '+sprintW+'px)';
-      tb.style.backgroundPositionX=(dateRight(cfg.startDate)%sprintW)+'px';
-    } else {
-      tb.style.backgroundImage='none';
+      var wps=cfg.weeksPerSprint||3;
+      var sDate=new Date(cfg.startDate+'T12:00:00');
+      var msPerSprint=wps*7*86400000;
+      // find first boundary at or after TL_START
+      var msDiff=TL_START.getTime()-sDate.getTime();
+      var firstIdx=msDiff>0?Math.ceil(msDiff/msPerSprint):0;
+      for(var si=firstIdx;si<=TL_WEEKS/wps+firstIdx+1;si++){
+        var boundaryDate=new Date(sDate.getTime()+si*msPerSprint);
+        var rx=dateRight(fd(boundaryDate));
+        if(rx<0||rx>TW)continue;
+        var div=document.createElement('div');
+        div.style.cssText='position:absolute;top:0;bottom:0;right:'+rx+'px;width:1px;background:#A8A49C;pointer-events:none;z-index:1;';
+        tb.appendChild(div);
+      }
     }
-  }catch(e){tb.style.backgroundImage='none';}
+  }catch(e){}
   var rows=getRows();
   var totH=rows.reduce(function(s,r){return s+rowH(r);},0);
 
