@@ -720,6 +720,17 @@ function getRollupColor(row){
 
 function renderBody(TW,WW_){
   var tb=document.getElementById('tlbody');tb.innerHTML='';tb.style.width=TW+'px';
+  // sprint divider lines
+  try{
+    var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
+    if(cfg&&cfg.startDate){
+      var sprintW=(cfg.weeksPerSprint||3)*WW_;
+      tb.style.backgroundImage='repeating-linear-gradient(to left, #D0CEC8 0px, #D0CEC8 1px, transparent 1px, transparent '+sprintW+'px)';
+      tb.style.backgroundPositionX=(dateRight(cfg.startDate)%sprintW)+'px';
+    } else {
+      tb.style.backgroundImage='none';
+    }
+  }catch(e){tb.style.backgroundImage='none';}
   var rows=getRows();
   var totH=rows.reduce(function(s,r){return s+rowH(r);},0);
 
