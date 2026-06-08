@@ -443,8 +443,8 @@ function loadData(){
     }
     // normalize weeks for all tasks using same formula as summary
     if(D.tasks){D.tasks.forEach(function(t){
-      t.weeks=Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime())/(7*86400000))+1);
-      t.end=fd(addW(pd(t.start),t.weeks-1));
+      t.weeks=Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime()-6*86400000)/(7*86400000))+1);
+      t.end=fd(addD(addW(pd(t.start),t.weeks-1),6));
     });}
     return true;
   }catch(e){return false;}
@@ -797,7 +797,7 @@ function renderBody(TW,WW_){
           var wi=Math.floor(pixFromRight/WW_);
           if(wi<0||wi>=TL_WEEKS)return;
           var startDate=fd(wkDate(wi));
-          var endDate=fd(addW(wkDate(wi),2));
+          var endDate=fd(addD(addW(wkDate(wi),1),6));
           var newId=D.nextTid++;
           snapshot();
           D.tasks.push({id:newId,wid:w.id,name:'משימה חדשה',start:startDate,end:endDate,weeks:2,color:null});
@@ -830,7 +830,7 @@ function renderBody(TW,WW_){
         });
       })(row.obj);
       D.tasks.filter(function(t){return t.wid===row.obj.id;}).forEach(function(t){
-        var weeks=Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime())/(7*86400000))+1);
+        var weeks=Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime()-6*86400000)/(7*86400000))+1);
         var r=dateRight(t.start),bw=weeks*WW_-2;
         if(bw<2)return;
         var primaryW=D.workers.find(function(w){return w.id===t.wid;});
@@ -1015,7 +1015,7 @@ function startDrag(e,tid,worker,blk){
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
     // normalize end to week-aligned from start
-    t.end=fd(addW(pd(t.start),t.weeks||2));
+    t.end=fd(addD(addW(pd(t.start),t.weeks-1),6));
     render();
   }
   document.addEventListener('mousemove',onMove);
@@ -1026,13 +1026,13 @@ function startResizeR(e,tid,blk){
   snapshot();
   var t=D.tasks.find(function(x){return x.id===tid;});
   var os=t.start,sx=e.clientX;
-  var origSpan=t.weeks||Math.max(1,Math.round(diffW(pd(os),pd(t.end))));
+  var origSpan=t.weeks||1;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
     var newSpan=Math.max(1,origSpan-d);
     t.start=fd(addW(pd(os),origSpan-newSpan));
     t.weeks=newSpan;
-    t.end=fd(addW(pd(t.start),newSpan));
+    t.end=fd(addD(addW(pd(t.start),newSpan-1),6));
     blk.style.right=dateRight(t.start)+'px';blk.style.width=(newSpan*WW()-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
@@ -1043,13 +1043,13 @@ function startResizeL(e,tid,blk){
   e.preventDefault();e.stopPropagation();
   snapshot();
   var t=D.tasks.find(function(x){return x.id===tid;});
-  var oe=t.end,sx=e.clientX;
-  var origSpan=t.weeks||Math.max(1,Math.round(diffW(pd(t.start),pd(oe))));
+  var sx=e.clientX;
+  var origSpan=t.weeks||1;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
     var newSpan=Math.max(1,origSpan+d);
     t.weeks=newSpan;
-    t.end=fd(addW(pd(t.start),newSpan));
+    t.end=fd(addD(addW(pd(t.start),newSpan-1),6));
     blk.style.width=(newSpan*WW()-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
@@ -1547,7 +1547,7 @@ function openTaskModal(tid,wid,startDate){
   document.getElementById('tsm-start').value=sVal;
   document.getElementById('tsm-end').value=eVal;
   // sync weeks field
-  var wks=t&&t.weeks?t.weeks:Math.max(1,Math.round((pd(eVal).getTime()-pd(sVal).getTime())/(7*86400000))+1);
+  var wks=t&&t.weeks?t.weeks:Math.max(1,Math.round((pd(eVal).getTime()-pd(sVal).getTime()-6*86400000)/(7*86400000))+1);
   document.getElementById('tsm-weeks').value=wks;
   buildColors('tsm-colors',t?t.color:null,true);
   om('tskmodal');setTimeout(function(){document.getElementById('tsm-name').focus();},50);
@@ -1557,7 +1557,7 @@ function saveTask(){
   var wid=parseInt(document.getElementById('tsm-worker').value);
   var start=document.getElementById('tsm-start').value;
   var weeks=Math.max(1,parseInt(document.getElementById('tsm-weeks').value)||1);
-  var end=fd(addW(pd(start),weeks-1));
+  var end=fd(addD(addW(pd(start),weeks-1),6));
   if(!name||!start)return;
   var ce=document.querySelector('#tsm-colors .copt.on');
   var color=(ce&&ce.dataset.none)?null:(ce?(ce.dataset.hex||ce.style.background):null);
@@ -1637,7 +1637,7 @@ function buildSummary(){
   if(!body)return;
   var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
   var HPW=cfg.hoursPerWeek||42;
-  function taskWeeks(t){return Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime())/(7*86400000))+1);}
+  function taskWeeks(t){return Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime()-6*86400000)/(7*86400000))+1);}
   var rows=[];var totalWeeks=0,totalHours=0;
   D.groups.forEach(function(g){
     var gWeeks=0;
@@ -1692,7 +1692,7 @@ window.exportSummaryXlsx=function exportSummaryXlsx(){
   if(typeof XLSX==='undefined'){toast('טוען...');return;}
   var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
   var HPW=cfg.hoursPerWeek||42;
-  function taskWeeks(t){return Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime())/(7*86400000))+1);}
+  function taskWeeks(t){return Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime()-6*86400000)/(7*86400000))+1);}
   var wsData=[['קבוצה','צוות','שבועות','שעות']];
   var totalW=0,totalH=0;
   D.groups.forEach(function(g){
@@ -1821,13 +1821,13 @@ window.saveNote=saveNote;
 function updateTaskEnd(){
   var s=document.getElementById('tsm-start').value;
   var w=parseInt(document.getElementById('tsm-weeks').value)||1;
-  if(s){document.getElementById('tsm-end').value=fd(addW(pd(s),w-1));}
+  if(s){document.getElementById('tsm-end').value=fd(addD(addW(pd(s),w-1),6));}
 }
 function updateTaskWeeks(){
   var s=document.getElementById('tsm-start').value;
   var e=document.getElementById('tsm-end').value;
   if(s&&e){
-    var w=Math.max(1,Math.round((pd(e).getTime()-pd(s).getTime())/(7*86400000))+1);
+    var w=Math.max(1,Math.round((pd(e).getTime()-pd(s).getTime()-6*86400000)/(7*86400000))+1);
     document.getElementById('tsm-weeks').value=w;
   }
 }
