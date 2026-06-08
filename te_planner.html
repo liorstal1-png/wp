@@ -150,7 +150,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 <div class="topbar">
   <button class="btn" onclick="goBackHome()" style="font-size:13px;padding:6px 10px;">← חזרה</button>
   <div class="tsep"></div>
-  <h1 id="plannerTitle">📋 תכנית עבודה</h1>
+  <h1 id="plannerTitle">📋 תכנית עבודה [v42]</h1>
   <div class="tsep"></div>
   <div style="display:flex;align-items:center;gap:3px;">
     <button class="zbtn" id="zoomOut">−</button>
@@ -441,7 +441,11 @@ function loadData(){
       var tids=D.tasks.map(function(t){return +t.id;});
       D.deps=D.deps.filter(function(d){return tids.indexOf(+d.fromTid)!==-1&&tids.indexOf(+d.toTid)!==-1;});
     }
-    if(!D.nextSid)D.nextSid=1;if(!D.nextGid)D.nextGid=10;if(!D.nextTmid)D.nextTmid=20;
+    // normalize weeks for all tasks using same formula as summary
+    if(D.tasks){D.tasks.forEach(function(t){
+      t.weeks=Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime())/(7*86400000))+1);
+      t.end=fd(addW(pd(t.start),t.weeks-1));
+    });}
     return true;
   }catch(e){return false;}
 }
@@ -786,14 +790,17 @@ function renderBody(TW,WW_){
         re.addEventListener('mouseenter',(function(wid){return function(){_lastPasteWid=wid;};})(w.id));
         re.addEventListener('dblclick',function(e){
           var el=e.target;while(el&&el!==re){if(el.classList&&el.classList.contains('blk'))return;el=el.parentElement;}
-          var rect=re.getBoundingClientRect();
-          var wi=Math.floor((rect.right-e.clientX)/WW_);
+          var tlwrap=document.getElementById('tlwrap');
+          var wrapRect=tlwrap.getBoundingClientRect();
+          // RTL: pixel from right edge of tlinner
+          var pixFromRight=(wrapRect.right - e.clientX) + tlwrap.scrollLeft;
+          var wi=Math.floor(pixFromRight/WW_);
           if(wi<0||wi>=TL_WEEKS)return;
           var startDate=fd(wkDate(wi));
           var endDate=fd(addW(wkDate(wi),2));
           var newId=D.nextTid++;
           snapshot();
-          D.tasks.push({id:newId,wid:w.id,name:'משימה חדשה',start:startDate,end:endDate,color:null});
+          D.tasks.push({id:newId,wid:w.id,name:'משימה חדשה',start:startDate,end:endDate,weeks:2,color:null});
           render();
           setTimeout(function(){
             var blk=document.querySelector('.blk[data-tid="'+newId+'"]');
@@ -823,7 +830,8 @@ function renderBody(TW,WW_){
         });
       })(row.obj);
       D.tasks.filter(function(t){return t.wid===row.obj.id;}).forEach(function(t){
-        var r=dateRight(t.start),r2=dateRight(t.end)+WW_,bw=r2-r-2;
+        var weeks=Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime())/(7*86400000))+1);
+        var r=dateRight(t.start),bw=weeks*WW_-2;
         if(bw<2)return;
         var primaryW=D.workers.find(function(w){return w.id===t.wid;});
         var col=t.color||(primaryW?primaryW.color:row.obj.color);
@@ -981,7 +989,7 @@ function startDrag(e,tid,worker,blk){
         var b=document.querySelector('.blk[data-tid="'+x.id+'"]');
         if(!b)return;
         b.style.right=dateRight(x.start)+'px';
-        b.style.width=(dateRight(x.end)+WW()-dateRight(x.start)-2)+'px';
+        b.style.width=(dateRight(x.end)-dateRight(x.start)+WW()-2)+'px';
       });
     }
     // vertical - cross row
@@ -1007,8 +1015,7 @@ function startDrag(e,tid,worker,blk){
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
     // normalize end to week-aligned from start
-    var span=Math.max(1,Math.round(diffW(pd(t.start),pd(t.end))));
-    t.end=fd(addW(pd(t.start),span));
+    t.end=fd(addW(pd(t.start),t.weeks||2));
     render();
   }
   document.addEventListener('mousemove',onMove);
@@ -1019,10 +1026,14 @@ function startResizeR(e,tid,blk){
   snapshot();
   var t=D.tasks.find(function(x){return x.id===tid;});
   var os=t.start,sx=e.clientX;
+  var origSpan=t.weeks||Math.max(1,Math.round(diffW(pd(os),pd(t.end))));
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var maxD=Math.ceil(diffW(pd(os),pd(t.end)))-1;var dc=Math.min(d,maxD);var ns=fd(addW(pd(os),dc));
-    t.start=ns;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
+    var newSpan=Math.max(1,origSpan-d);
+    t.start=fd(addW(pd(os),origSpan-newSpan));
+    t.weeks=newSpan;
+    t.end=fd(addW(pd(t.start),newSpan));
+    blk.style.right=dateRight(t.start)+'px';blk.style.width=(newSpan*WW()-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
   function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);render();}
@@ -1033,10 +1044,13 @@ function startResizeL(e,tid,blk){
   snapshot();
   var t=D.tasks.find(function(x){return x.id===tid;});
   var oe=t.end,sx=e.clientX;
+  var origSpan=t.weeks||Math.max(1,Math.round(diffW(pd(t.start),pd(oe))));
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var minD=-(Math.ceil(diffW(pd(t.start),pd(oe)))-1);var dc=Math.max(d,minD);var ne=fd(addW(pd(oe),dc));
-    t.end=ne;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.width=(r2-r-2)+'px';
+    var newSpan=Math.max(1,origSpan+d);
+    t.weeks=newSpan;
+    t.end=fd(addW(pd(t.start),newSpan));
+    blk.style.width=(newSpan*WW()-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
   function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);render();}
@@ -1519,12 +1533,39 @@ function saveWorker(){
   cm('wmodal');render();
 }
 
-function openTaskModal(tid,wid,startDate){_eTid=tid||null;var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';document.getElementById('tsm-name').value=t?t.name:'';var sel=document.getElementById('tsm-worker');sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));var td=fd(TODAY);document.getElementById('tsm-start').value=t?t.start:(startDate||td);document.getElementById('tsm-end').value=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));buildColors('tsm-colors',t?t.color:null,true);
-  om('tskmodal');setTimeout(function(){document.getElementById('tsm-name').focus();},50);}
-function saveTask(){var name=document.getElementById('tsm-name').value.trim();var wid=parseInt(document.getElementById('tsm-worker').value);var start=document.getElementById('tsm-start').value;var end=document.getElementById('tsm-end').value;if(!name||!start||!end||end<start)return;var ce=document.querySelector('#tsm-colors .copt.on');var color=(ce&&ce.dataset.none)?null:(ce?(ce.dataset.hex||ce.style.background):null);  snapshot();
-  if(_eTid){var t=D.tasks.find(function(x){return x.id===_eTid;});Object.assign(t,{name:name,wid:wid,start:start,end:end,color:color||null});}
-  else D.tasks.push({id:D.nextTid++,wid:wid,name:name,start:start,end:end,color:color||null});
-  cm('tskmodal');render();}
+function openTaskModal(tid,wid,startDate){
+  _eTid=tid||null;
+  var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;
+  document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';
+  document.getElementById('tsm-name').value=t?t.name:'';
+  var sel=document.getElementById('tsm-worker');
+  sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');
+  sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));
+  var td=fd(TODAY);
+  var sVal=t?t.start:(startDate||td);
+  var eVal=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));
+  document.getElementById('tsm-start').value=sVal;
+  document.getElementById('tsm-end').value=eVal;
+  // sync weeks field
+  var wks=t&&t.weeks?t.weeks:Math.max(1,Math.round((pd(eVal).getTime()-pd(sVal).getTime())/(7*86400000))+1);
+  document.getElementById('tsm-weeks').value=wks;
+  buildColors('tsm-colors',t?t.color:null,true);
+  om('tskmodal');setTimeout(function(){document.getElementById('tsm-name').focus();},50);
+}
+function saveTask(){
+  var name=document.getElementById('tsm-name').value.trim();
+  var wid=parseInt(document.getElementById('tsm-worker').value);
+  var start=document.getElementById('tsm-start').value;
+  var weeks=Math.max(1,parseInt(document.getElementById('tsm-weeks').value)||1);
+  var end=fd(addW(pd(start),weeks-1));
+  if(!name||!start)return;
+  var ce=document.querySelector('#tsm-colors .copt.on');
+  var color=(ce&&ce.dataset.none)?null:(ce?(ce.dataset.hex||ce.style.background):null);
+  snapshot();
+  if(_eTid){var t=D.tasks.find(function(x){return x.id===_eTid;});Object.assign(t,{name:name,wid:wid,start:start,end:end,weeks:weeks,color:color||null});}
+  else D.tasks.push({id:D.nextTid++,wid:wid,name:name,start:start,end:end,weeks:weeks,color:color||null});
+  cm('tskmodal');render();
+}
 
 function openSprintModal(sid){_eSid=sid||null;var s=sid?D.sprints.find(function(x){return x.id===sid;}):null;document.getElementById('spr-title').textContent=s?'ערוך ספרינט':'הוסף ספרינט';document.getElementById('spr-name').value=s?s.name:'Sprint '+(D.sprints.length+1);document.getElementById('spr-start').value=s?s.start:fd(TL_START);document.getElementById('spr-weeks').value=s?Math.max(1,Math.round(diffW(pd(s.start),pd(s.end)))):2;om('sprmodal');setTimeout(function(){document.getElementById('spr-name').focus();},50);}
 function saveSprint(){var name=document.getElementById('spr-name').value.trim();var start=document.getElementById('spr-start').value;var weeks=parseInt(document.getElementById('spr-weeks').value)||2;if(!name||!start)return;var end=fd(addD(addW(pd(start),weeks),-1));snapshot();if(_eSid){var s=D.sprints.find(function(x){return x.id===_eSid;});s.name=name;s.start=start;s.end=end;}else D.sprints.push({id:D.nextSid++,name:name,start:start,end:end});cm('sprmodal');render();toast('ספרינט נשמר ✓');}
@@ -1780,13 +1821,13 @@ window.saveNote=saveNote;
 function updateTaskEnd(){
   var s=document.getElementById('tsm-start').value;
   var w=parseInt(document.getElementById('tsm-weeks').value)||1;
-  if(s){document.getElementById('tsm-end').value=fd(addW(pd(s),w));}
+  if(s){document.getElementById('tsm-end').value=fd(addW(pd(s),w-1));}
 }
 function updateTaskWeeks(){
   var s=document.getElementById('tsm-start').value;
   var e=document.getElementById('tsm-end').value;
   if(s&&e){
-    var w=Math.max(1,Math.round(diffW(pd(s),pd(e))));
+    var w=Math.max(1,Math.round((pd(e).getTime()-pd(s).getTime())/(7*86400000))+1);
     document.getElementById('tsm-weeks').value=w;
   }
 }
