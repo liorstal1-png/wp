@@ -164,11 +164,16 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
   <button class="btn" id="addMsBtn">🚩 אבן דרך</button>
   <div class="tsep"></div>
   <button class="btn" id="rangeBtn">📅 טווח</button>
+  <button class="btn btn-sm" onclick="applyQuickRange(12)">3M</button>
+  <button class="btn btn-sm" onclick="applyQuickRange(24)">6M</button>
+  <button class="btn btn-sm" onclick="applyQuickRange(52)">שנה</button>
+  <button class="btn btn-sm" onclick="applyQuickRange(104)">2Y</button>
   <button class="btn" id="modeBtn">🔢 שבועות</button>
   <div class="spacer"></div>
   <button class="btn" id="undoBtn" title="Ctrl+Z">↩ ביטול</button>
   <button class="btn" id="clearDepsBtn" title="נקה תלויות">🔗 נקה תלויות</button>
   <button class="btn" id="summaryBtn">📊 סיכום</button>
+  <button class="btn" id="tasksTableBtn">📋 פירוט משימות</button>
   <button class="btn" id="exportBtn">📥 ייצוא</button>
 </div>
 
@@ -333,6 +338,20 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
       </div>
     </div>
     <div class="mbody" id="summaryBody" style="max-height:60vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- Tasks table modal -->
+<div class="ov" id="tasksTableModal" onclick="if(event.target===this)document.getElementById('tasksTableModal').classList.remove('open')">
+  <div class="modal" style="max-width:640px;">
+    <div class="mhdr">
+      <span class="mtitle">📋 פירוט משימות</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn btn-sm" onclick="exportTasksTableXlsx()">📥 Excel</button>
+        <button class="mx" onclick="document.getElementById('tasksTableModal').classList.remove('open')">✕</button>
+      </div>
+    </div>
+    <div class="mbody" id="tasksTableBody" style="max-height:65vh;overflow-y:auto;padding:0;"></div>
   </div>
 </div>
 
@@ -900,16 +919,15 @@ function renderBody(TW,WW_){
 }
 
 // ── DRAG & RESIZE ──────────────────────────────────────────────────────────
-function resolvePush(wid, origSpans){
+function resolvePush(wid){
   var tasks=D.tasks.filter(function(x){return x.wid===wid;});
   tasks.sort(function(a,b){return pd(a.start).getTime()-pd(b.start).getTime();});
   for(var i=0;i<tasks.length-1;i++){
     var a=tasks[i],b=tasks[i+1];
-    if(pd(a.end).getTime()+7*86400000>pd(b.start).getTime()){
-      var span=(origSpans&&origSpans[b.id]!==undefined)?origSpans[b.id]:Math.round(diffW(pd(b.start),pd(b.end)));
-      if(span<1)span=1;
-      b.start=fd(addW(pd(a.end),1));
-      b.end=fd(addW(pd(b.start),span));
+    // a ends on Saturday, b starts on Sunday — overlap if b.start <= a.end
+    if(pd(b.start).getTime()<=pd(a.end).getTime()){
+      b.start=fd(addW(pd(a.start),a.weeks||1));
+      b.end=fd(addD(addW(pd(b.start),b.weeks-1),6));
     }
   }
   propagateDeps();
@@ -959,37 +977,33 @@ function startDrag(e,tid,worker,blk){
   snapshot();
   var t=D.tasks.find(function(x){return x.id===tid;});
   blk.classList.add('drag');
-  var os=t.start,oe=t.end,sx=e.clientX,last=null;
-  var span=Math.round(diffW(pd(os),pd(oe)));if(span<1)span=1;
+  var os=t.start,sx=e.clientX,last=null;
   var currentRow=blk.parentElement;
-  var origSpans={};
-  D.tasks.filter(function(x){return x.wid===worker.id;}).forEach(function(x){
-    origSpans[x.id]=Math.round(diffW(pd(x.start),pd(x.end)));
-  });
+  // save original positions — use weeks directly
   var origPos={};
-  D.tasks.filter(function(x){return x.wid===worker.id&&x.id!==tid;}).forEach(function(x){
-    origPos[x.id]={start:x.start,end:x.end};
+  D.tasks.filter(function(x){return x.wid===worker.id;}).forEach(function(x){
+    origPos[x.id]={start:x.start,end:x.end,weeks:x.weeks||1};
   });
 
   function onMove(ev){
-    // horizontal
     var d=Math.round(-(ev.clientX-sx)/WW());
     if(d!==last){
       last=d;
       t.start=fd(addW(pd(os),d));
-      t.end=fd(addW(pd(oe),d));
+      t.end=fd(addD(addW(pd(t.start),t.weeks-1),6));
       blk.style.right=dateRight(t.start)+'px';
+      // restore all other tasks to original, then push
       D.tasks.filter(function(x){return x.wid===t.wid&&x.id!==tid;}).forEach(function(x){
-        if(origPos[x.id]){x.start=origPos[x.id].start;x.end=origPos[x.id].end;}
+        if(origPos[x.id]){x.start=origPos[x.id].start;x.end=origPos[x.id].end;x.weeks=origPos[x.id].weeks;}
       });
-      resolvePush(t.wid,origSpans);
-      // update all affected tasks visually (same row + dep targets)
+      resolvePush(t.wid);
+      // update visuals
       D.tasks.forEach(function(x){
         if(x.id===tid)return;
         var b=document.querySelector('.blk[data-tid="'+x.id+'"]');
         if(!b)return;
         b.style.right=dateRight(x.start)+'px';
-        b.style.width=(dateRight(x.end)-dateRight(x.start)+WW()-2)+'px';
+        b.style.width=((x.weeks||1)*WW()-2)+'px';
       });
     }
     // vertical - cross row
@@ -1014,7 +1028,6 @@ function startDrag(e,tid,worker,blk){
     blk.classList.remove('drag');
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
-    // normalize end to week-aligned from start
     t.end=fd(addD(addW(pd(t.start),t.weeks-1),6));
     render();
   }
@@ -1571,6 +1584,16 @@ function openSprintModal(sid){_eSid=sid||null;var s=sid?D.sprints.find(function(
 function saveSprint(){var name=document.getElementById('spr-name').value.trim();var start=document.getElementById('spr-start').value;var weeks=parseInt(document.getElementById('spr-weeks').value)||2;if(!name||!start)return;var end=fd(addD(addW(pd(start),weeks),-1));snapshot();if(_eSid){var s=D.sprints.find(function(x){return x.id===_eSid;});s.name=name;s.start=start;s.end=end;}else D.sprints.push({id:D.nextSid++,name:name,start:start,end:end});cm('sprmodal');render();toast('ספרינט נשמר ✓');}
 
 function quickRange(w){document.getElementById('range-s').value=fd(TL_START);document.getElementById('range-w').value=w;}
+function applyQuickRange(w){
+  TL_WEEKS=w;
+  var availW=document.getElementById('tlwrap').clientWidth||800;
+  ZL=Math.max(25,Math.min(300,Math.floor(availW/TL_WEEKS/80*100)));
+  document.getElementById('zlbl').textContent=ZL+'%';
+  render();
+  var tlwrap=document.getElementById('tlwrap');
+  tlwrap.style.direction='ltr';tlwrap.scrollLeft=0;tlwrap.style.direction='rtl';tlwrap.scrollLeft=0;
+  toast(w===12?'3 חודשים':w===24?'6 חודשים':w===52?'שנה':'שנתיים');
+}
 
 // Apply range — inline handler to guarantee it reads fresh values
 document.getElementById('applyRangeBtn').addEventListener('click',function(){
@@ -1735,6 +1758,95 @@ window.exportSummaryXlsx=function exportSummaryXlsx(){
 };
 
 window.buildSummary=buildSummary;
+
+document.getElementById('tasksTableBtn').onclick=function(){
+  buildTasksTable();
+  document.getElementById('tasksTableModal').classList.add('open');
+};
+
+function buildTasksTable(){
+  var body=document.getElementById('tasksTableBody');
+  if(!body)return;
+  var rows=[];
+  D.groups.forEach(function(g){
+    var workers=[];
+    // workers via teams
+    D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
+      D.workers.filter(function(w){return +w.tid===+team.id;}).forEach(function(w){workers.push(w);});
+    });
+    // direct workers
+    D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).forEach(function(w){workers.push(w);});
+    workers.forEach(function(w){
+      var tasks=D.tasks.filter(function(t){return +t.wid===+w.id;});
+      if(!tasks.length)return;
+      tasks.forEach(function(t,ti){
+        rows.push({gname:g.name,gspan:0,wname:w.name,wcolor:w.color,wspan:0,tname:t.name,weeks:t.weeks||1,first:ti===0,gFirst:false,offProject:t.offProject});
+      });
+    });
+  });
+  // calc spans
+  var i=0;
+  while(i<rows.length){
+    // group span
+    var gname=rows[i].gname,gs=i;
+    while(i<rows.length&&rows[i].gname===gname)i++;
+    rows[gs].gspan=i-gs;rows[gs].gFirst=true;
+  }
+  i=0;
+  while(i<rows.length){
+    var wname=rows[i].wname,gn=rows[i].gname,ws2=i;
+    while(i<rows.length&&rows[i].wname===wname&&rows[i].gname===gn)i++;
+    rows[ws2].wspan=i-ws2;
+  }
+
+  var html='<table style="width:100%;border-collapse:collapse;font-size:12px;font-family:Heebo,sans-serif;direction:rtl;">';
+  html+='<thead><tr style="background:#1E3A5F;color:#fff;">';
+  html+='<th style="padding:8px 10px;text-align:right;font-weight:700;">קבוצה</th>';
+  html+='<th style="padding:8px 10px;text-align:right;font-weight:700;">עובד</th>';
+  html+='<th style="padding:8px 10px;text-align:right;font-weight:700;">משימה</th>';
+  html+='<th style="padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap;">שבועות</th>';
+  html+='</tr></thead><tbody>';
+
+  rows.forEach(function(r){
+    html+='<tr style="border-bottom:1px solid #E0DED8;'+(r.offProject?'opacity:.6;':'')+'">';
+    if(r.gFirst){
+      html+='<td rowspan="'+r.gspan+'" style="padding:8px 10px;vertical-align:middle;font-weight:700;background:#F0EEE8;border-left:3px solid #1E3A5F;text-align:right;">'+r.gname+'</td>';
+    }
+    if(r.first){
+      html+='<td rowspan="'+r.wspan+'" style="padding:8px 10px;vertical-align:middle;text-align:right;background:#FAFAF8;">';
+      html+='<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:'+r.wcolor+';flex-shrink:0;display:inline-block;"></span><span>'+r.wname+'</span></span></td>';
+    }
+    html+='<td style="padding:6px 10px;text-align:right;">'+(r.offProject?'<span style="color:#888;font-size:10px;">🔀</span> ':'')+r.tname+'</td>';
+    html+='<td style="padding:6px 10px;text-align:center;font-weight:600;color:#378ADD;">'+r.weeks+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  body.innerHTML=html;
+}
+
+window.exportTasksTableXlsx=function(){
+  if(typeof XLSX==='undefined'){toast('טוען...');return;}
+  var wsData=[['קבוצה','עובד','משימה','שבועות','לא על חשבון']];
+  D.groups.forEach(function(g){
+    var workers=[];
+    D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
+      D.workers.filter(function(w){return +w.tid===+team.id;}).forEach(function(w){workers.push(w);});
+    });
+    D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).forEach(function(w){workers.push(w);});
+    workers.forEach(function(w){
+      var tasks=D.tasks.filter(function(t){return +t.wid===+w.id;});
+      tasks.forEach(function(t){
+        wsData.push([g.name,w.name,t.name,t.weeks||1,t.offProject?'כן':'']);
+      });
+    });
+  });
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols']=[{wch:16},{wch:16},{wch:30},{wch:10},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'משימות');
+  XLSX.writeFile(wb,'tasks.xlsx');
+  toast('Excel יוצא');
+};
 
 document.getElementById('exportBtn').onclick=function(){
   var rows=[['משימה','עובד','התחלה','סיום','תלות']];
