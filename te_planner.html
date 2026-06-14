@@ -989,8 +989,12 @@ function startDrag(e,tid,worker,blk){
     var d=Math.round(-(ev.clientX-sx)/WW());
     if(d!==last){
       last=d;
-      t.start=fd(addW(pd(os),d));
-      t.end=fd(addD(addW(pd(t.start),t.weeks-1),6));
+      var newStart=addW(pd(os),d);
+      // snap to nearest Sunday
+      var day=newStart.getDay(); // 0=Sun
+      if(day!==0)newStart=addD(newStart,-day);
+      t.start=fd(newStart);
+      t.end=fd(addD(addW(newStart,t.weeks-1),6));
       blk.style.right=dateRight(t.start)+'px';
       // restore all other tasks to original, then push
       D.tasks.filter(function(x){return x.wid===t.wid&&x.id!==tid;}).forEach(function(x){
