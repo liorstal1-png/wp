@@ -602,6 +602,7 @@ body:not(.edit-mode) .edit-only{display:none!important;}
     <div class="mbody">
       <div class="fld"><label>שם פרויקט</label><input id="ep-name" placeholder="שם..."/></div>
       <div class="fld"><label>קוד פרויקט</label><input id="ep-code" placeholder="P001..." style="font-family:monospace;"/></div>
+      <div class="fld"><label>מזהה פרויקט <span style="font-size:10px;color:var(--mut);font-weight:400;">(לקישור עם תוכנית עבודה)</span></label><input id="ep-gid" placeholder="PROJ001..." style="font-family:monospace;"/></div>
       <div class="fld"><label>מנהל פרויקט</label><input id="ep-pm" placeholder="שם מנהל..."/></div>
       <div class="fld"><label>סיווג</label>
         <select id="ep-class"><option value="">--</option><option value="לקוח">לקוח</option><option value="פנימי">פנימי</option></select>
@@ -848,6 +849,7 @@ function render(){
   var TW=totalW(), WW_=WW();
   var gs=getGroups();
   var BL_ROW_H=(_activeBL!==null&&getBaselines()[_activeBL])?20:0;
+  var TP_ROW_H=(_tpActive&&_tpActive.size>0)?22:0;
   // חשב גובה שורת אבני דרך
   _msVisible=D.milestones.filter(function(ms){
     var _fpA=(FP_SET&&FP_SET.size>0)?FP_SET:(FP!=='all'?new Set([FP]):null);
@@ -860,7 +862,7 @@ function render(){
   var _msMaxStack=Object.keys(_msXMap).reduce(function(m,k){return Math.max(m,_msXMap[k]);},0)||0;
   var MS_BASE_H=28, MS_ITEM_H=22;
   var MS_ROW_H=SHOW_MS_ROW?Math.max(MS_BASE_H, MS_BASE_H+(_msMaxStack-1)*MS_ITEM_H):MS_BASE_H;
-  var totalH=0; gs.forEach(function(g){totalH+=GH+g.workers.length*(RH+BL_ROW_H);});
+  var totalH=0; gs.forEach(function(g){totalH+=GH+g.workers.length*(RH+BL_ROW_H+TP_ROW_H);});
   var totalHwithMs=(_msVisible.length>0?MS_ROW_H:0)+totalH;
 
   document.getElementById('tlinner').style.width=TW+'px';
@@ -1391,7 +1393,8 @@ function renderSidebar(gs){
         if(!_ok2)return;
       }
       var _blH2=(_activeBL!==null&&getBaselines()[_activeBL])?20:0;
-      var row=document.createElement('div'); row.className='wrow'; row.style.height=(RH+_blH2)+'px';
+      var _tpH2=(_tpActive&&_tpActive.size>0)?22:0;
+      var row=document.createElement('div'); row.className='wrow'; row.style.height=(RH+_blH2+_tpH2)+'px';
       var nm=document.createElement('div'); nm.className='wname'; nm.textContent=w.name; nm.title=w.name;
       var eb=document.createElement('button'); eb.className='wedit edit-only'; eb.textContent='✏️';
       eb.onclick=function(e){e.stopPropagation();_wrkId=w.id;cEditWrk();};
@@ -2098,6 +2101,7 @@ function openEditProject(pid){
   if(document.getElementById('ep-code'))document.getElementById('ep-code').value=p.code||'';
   if(document.getElementById('ep-pm'))document.getElementById('ep-pm').value=p.pm||'';
   if(document.getElementById('ep-class'))document.getElementById('ep-class').value=p.classification||'';
+  if(document.getElementById('ep-gid'))document.getElementById('ep-gid').value=p.globalId||'';
   om('epmodal');setTimeout(function(){document.getElementById('ep-name').focus();},200);
 }
 var selEpCol=0;
@@ -2122,6 +2126,7 @@ function saveEditProject(){
   p.code=document.getElementById('ep-code')?document.getElementById('ep-code').value.trim():'';
   p.classification=document.getElementById('ep-class')?document.getElementById('ep-class').value:'';
   p.pm=document.getElementById('ep-pm')?document.getElementById('ep-pm').value.trim():'';
+  p.globalId=document.getElementById('ep-gid')?document.getElementById('ep-gid').value.trim()||undefined:undefined;
   var parentId=document.getElementById('ep-parent')?document.getElementById('ep-parent').value:'';
   if(parentId){p.parentId=parentId;}else{delete p.parentId;}
   p.color=getChosenChildColorEp();
@@ -3837,73 +3842,97 @@ function buildTPPanel(){
 
 // Call this from render() to draw overlays after rows are built
 function renderTPOverlays(){
-  // Remove old overlays
-  document.querySelectorAll('.tp-blk').forEach(function(el){el.remove();});
+  document.querySelectorAll('.tp-blk,.tp-row').forEach(function(el){el.remove();});
   if(_tpActive.size === 0) return;
 
   var TW = totalW(), WW_ = WW();
   var projects = getTPProjects().filter(function(p){ return _tpActive.has(p.key); });
+  if(!projects.length) return;
+
+  // קבץ משימות לפי ganttWorkerId
+  var byWorker = {};
 
   projects.forEach(function(proj){
     var planWorkers = proj.data.workers || [];
-    var planTasks = proj.data.tasks || [];
+    var planTasks   = proj.data.tasks   || [];
+    // globalId של הפרויקט נמצא ב-meta שנשמר בתוך data
+    var projGlobalId = proj.key ? (function(){
+      try{var raw=localStorage.getItem(proj.key);if(!raw)return undefined;var p=JSON.parse(raw);return p&&p.meta?p.meta.globalId:undefined;}catch(e){return undefined;}
+    })() : undefined;
+
+    var matchedGanttProj = projGlobalId
+      ? D.projects.find(function(gp){ return gp.globalId && gp.globalId === projGlobalId; })
+      : null;
 
     planTasks.forEach(function(task){
-      // find matching worker by globalId
       var planWorker = planWorkers.find(function(w){ return +w.id === +task.wid; });
-      if(!planWorker) return;
-      if(!planWorker.globalId) return; // no globalId — skip
-
-      // find gantt worker with same globalId
+      if(!planWorker || !planWorker.globalId) return;
       var ganttWorker = D.workers.find(function(w){ return w.globalId && w.globalId === planWorker.globalId; });
       if(!ganttWorker) return;
+      var wid = String(ganttWorker.id);
+      if(!byWorker[wid]) byWorker[wid] = [];
+      var col = matchedGanttProj ? matchedGanttProj.color : (planWorker.color || '#378ADD');
+      byWorker[wid].push({task:task, col:col, mismatch:!matchedGanttProj, projName:proj.name});
+    });
+  });
 
-      // find the tlrow for the gantt worker
-      var tlRow = document.querySelector('.tlrow[data-wid="' + ganttWorker.id + '"]');
-      if(!tlRow) return;
+  Object.keys(byWorker).forEach(function(wid){
+    var tlRow = document.querySelector('.tlrow[data-wid="'+wid+'"]');
+    if(!tlRow) return;
+    var items = byWorker[wid];
 
-      // compute position using gantt's own dateX (LTR)
+    // שורת tp מתחת ל-tlrow
+    var tpRow = document.createElement('div');
+    tpRow.className = 'tp-row';
+    tpRow.style.cssText = 'position:relative;display:flex;direction:ltr;width:'+TW+'px;height:22px;border-bottom:1px solid #E0DED8;background:#F5F4F0;overflow:hidden;';
+
+    // תאי רקע
+    for(var i=TL_WEEKS-1;i>=0;i--){
+      var c=document.createElement('div');
+      c.style.cssText='width:'+WW_+'px;height:22px;border-right:1px solid #e8e6e0;flex-shrink:0;box-sizing:border-box;';
+      tpRow.appendChild(c);
+    }
+
+    // בלוקי משימות
+    items.forEach(function(item){
+      var task = item.task;
       var x = dateX(task.end);
       var xStart = dateX(task.start);
-      var width = Math.max(xStart - x + WW_, WW_ * 0.5);
+      var width = Math.max(xStart - x + WW_, WW_ * 0.4);
       if(x + width < 0 || x > TW) return;
 
-      var rowH = tlRow.offsetHeight || RH;
-      var top = 3, blkH = rowH - 6;
-
-      // check collision with any assignment in this row
-      var wid = ganttWorker.id;
-      var hasCollision = D.assignments.some(function(a){
-        if(String(a.workerId) !== String(wid)) return false;
-        // overlap check
-        return pd(task.start) <= pd(a.end) && pd(task.end) >= pd(a.start);
-      });
-
       var blk = document.createElement('div');
-      blk.className = 'tp-blk' + (hasCollision ? ' collision' : '');
-
-      // color from task or worker color
-      var col = task.color || planWorker.color || '#378ADD';
-
+      blk.className = 'tp-blk';
       blk.style.cssText =
-        'left:' + x + 'px;' +
-        'width:' + width + 'px;' +
-        'top:' + top + 'px;' +
-        'height:' + blkH + 'px;' +
-        'background:' + col + ';' +
-        'opacity:' + (hasCollision ? '0.55' : '0.32') + ';' +
-        'border-radius:4px;';
+        'left:'+x+'px;'+
+        'width:'+(width-2)+'px;'+
+        'top:3px;'+
+        'height:16px;'+
+        'background:'+item.col+';'+
+        'opacity:0.75;'+
+        'border-radius:3px;'+
+        (item.mismatch ? 'outline:2px dashed #E24B4A;outline-offset:-1px;' : '');
 
-      var title = document.createElement('div');
-      title.className = 'tp-blk-title';
-      title.textContent = task.name;
-      blk.appendChild(title);
+      var lbl = document.createElement('div');
+      lbl.className = 'tp-blk-title';
+      lbl.textContent = task.name;
+      blk.appendChild(lbl);
 
-      // tooltip
-      blk.title = task.name + '\n' + task.start + ' → ' + task.end + (hasCollision ? '\n⚠️ התנגשות עם שיבוץ קיים' : '');
+      if(item.mismatch){
+        blk.title = '⚠️ לא נמצא פרויקט מתאים בשיבוץ\n'+task.name+'\n'+task.start+' → '+task.end;
+      } else {
+        blk.title = task.name+'\n'+task.start+' → '+task.end+'\n'+item.projName;
+      }
 
-      tlRow.appendChild(blk);
+      tpRow.appendChild(blk);
     });
+
+    // הכנס את השורה אחרי tlRow
+    if(tlRow.nextSibling){
+      tlRow.parentNode.insertBefore(tpRow, tlRow.nextSibling);
+    } else {
+      tlRow.parentNode.appendChild(tpRow);
+    }
   });
 }
 

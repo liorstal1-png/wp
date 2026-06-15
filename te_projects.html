@@ -67,6 +67,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
     <div class="mhdr"><span class="mtitle" id="pm-title">פרויקט חדש</span><button class="mx" onclick="closeProjModal()">✕</button></div>
     <div class="mbody">
       <div class="fld"><label>שם הפרויקט</label><input id="pm-name" placeholder="פרויקט..."/></div>
+      <div class="fld"><label>מזהה פרויקט <span style="font-size:10px;color:var(--mut);font-weight:400;">(לקישור עם שיבוץ)</span></label><input id="pm-gid" placeholder="PROJ001..." style="font-family:monospace;"/></div>
       <div class="fld"><label>תיאור (אופציונלי)</label><textarea id="pm-desc" rows="2"></textarea></div>
     </div>
     <div class="mfoot">
@@ -115,6 +116,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
     <div class="mhdr"><span class="mtitle">הוסף עובד</span><button class="mx" onclick="closeOrgWorkerModal()">✕</button></div>
     <div class="mbody">
       <div class="fld"><label>שם עובד</label><input id="ogw-name" placeholder="שם..."/></div>
+      <div class="fld"><label>מזהה עובד <span style="font-size:10px;color:var(--mut);font-weight:400;">(לקישור עם שיבוץ)</span></label><input id="ogw-gid" placeholder="EMP001, alon.cohen..." style="font-family:monospace;"/></div>
       <div class="fld"><label>צבע</label><div class="crow" id="ogw-colors"></div></div>
     </div>
     <div class="mfoot">
@@ -190,7 +192,12 @@ window.renderGrid=function renderGrid(){
     var updated=p.updatedAt?new Date(p.updatedAt).toLocaleDateString('he-IL'):'';
     // name and meta
     var nm=document.createElement('div');nm.className='card-name';nm.textContent=p.name;
-    var mt=document.createElement('div');mt.className='card-meta';mt.textContent=(p.desc?p.desc+' · ':'')+( updated?'עודכן: '+updated:'');
+    var mt=document.createElement('div');mt.className='card-meta';
+    var metaParts=[];
+    if(p.globalId)metaParts.push('<span style="font-family:monospace;font-size:10px;background:#EBF4FF;color:var(--acc);border-radius:3px;padding:1px 5px;">'+p.globalId+'</span>');
+    if(p.desc)metaParts.push(p.desc);
+    if(updated)metaParts.push('עודכן: '+updated);
+    mt.innerHTML=metaParts.join(' · ');
     // action buttons
     var acts=document.createElement('div');acts.className='card-actions';
     var eb=document.createElement('button');eb.textContent='✏️';
@@ -222,6 +229,7 @@ function openProjModal(id){
   var p=id?loadProject(id):null;
   document.getElementById('pm-name').value=p?p.meta.name:'';
   document.getElementById('pm-desc').value=p&&p.meta.desc?p.meta.desc:'';
+  document.getElementById('pm-gid').value=p&&p.meta.globalId?p.meta.globalId:'';
   document.getElementById('projModal').classList.add('open');
   setTimeout(function(){document.getElementById('pm-name').focus();},50);
 }
@@ -230,11 +238,12 @@ function closeProjModal(){document.getElementById('projModal').classList.remove(
 function saveProj(){
   var name=document.getElementById('pm-name').value.trim();if(!name)return;
   var desc=document.getElementById('pm-desc').value.trim();
+  var globalId=document.getElementById('pm-gid').value.trim()||undefined;
   var isNew=!_editId;
   // ensure id is always a clean string
   var id=(typeof _editId==='string'&&_editId)?_editId:('p'+Date.now());
   var existing=_editId?loadProject(id):null;
-  var meta={id:id,name:name,desc:desc,createdAt:existing?existing.meta.createdAt:Date.now()};
+  var meta={id:id,name:name,desc:desc,globalId:globalId,createdAt:existing?existing.meta.createdAt:Date.now()};
   saveProject(id,meta,existing?existing.data:null);
   _editId=null;
   closeProjModal();
@@ -320,6 +329,7 @@ function renderOrgTree(){
         html+='<div style="display:flex;align-items:center;gap:5px;padding:2px 6px 2px 32px;">';
         html+='<div style="width:8px;height:8px;border-radius:50%;background:'+(w.color||'#999')+';flex-shrink:0;"></div>';
         html+='<span style="font-size:11px;flex:1;">'+w.name+'</span>';
+        html+='<span onclick="editOrgWorker('+w.id+')" title="'+(w.globalId?'מזהה: '+w.globalId:'הוסף מזהה')+'" style="font-size:9px;font-family:monospace;padding:1px 5px;border-radius:3px;border:1px solid var(--brd);cursor:pointer;background:var(--bg);color:'+(w.globalId?'var(--acc)':'var(--mut)')+';">'+(w.globalId||'+ ID')+'</span>';
         html+='<button onclick="delOrgWorker('+w.id+')" style="background:none;border:none;cursor:pointer;font-size:11px;color:#E24B4A;">×</button>';
         html+='</div>';
       });
@@ -329,6 +339,7 @@ function renderOrgTree(){
       html+='<div style="display:flex;align-items:center;gap:5px;padding:2px 6px 2px 18px;">';
       html+='<div style="width:8px;height:8px;border-radius:50%;background:'+(w.color||'#999')+';flex-shrink:0;"></div>';
       html+='<span style="font-size:11px;flex:1;">'+w.name+'</span>';
+      html+='<span onclick="editOrgWorker('+w.id+')" title="'+(w.globalId?'מזהה: '+w.globalId:'הוסף מזהה')+'" style="font-size:9px;font-family:monospace;padding:1px 5px;border-radius:3px;border:1px solid var(--brd);cursor:pointer;background:var(--bg);color:'+(w.globalId?'var(--acc)':'var(--mut)')+';">'+(w.globalId||'+ ID')+'</span>';
       html+='<button onclick="delOrgWorker('+w.id+')" style="background:none;border:none;cursor:pointer;font-size:11px;color:#E24B4A;">×</button>';
       html+='</div>';
     });
@@ -385,19 +396,44 @@ function openOrgWorkerModal(gid,tid){
   var g=_orgTemplate.groups.find(function(x){return x.id===gid;});
   var shades=g&&g.color?orgGroupShades(g.color):COLS;
   document.getElementById('ogw-name').value='';
+  document.getElementById('ogw-gid').value='';
   buildOrgColors('ogw-colors',shades[2]||shades[0],shades);
   document.getElementById('orgWorkerModal').classList.add('open');
   setTimeout(function(){document.getElementById('ogw-name').focus();},50);
 }
-function closeOrgWorkerModal(){document.getElementById('orgWorkerModal').classList.remove('open');}
+function closeOrgWorkerModal(){window._editingOrgWorkerId=null;document.getElementById('orgWorkerModal').classList.remove('open');}
 function saveOrgWorker(){
   var name=document.getElementById('ogw-name').value.trim();if(!name)return;
   var ce=document.querySelector('#ogw-colors .org-copt.on');
   var col=ce?ce.dataset.hex:COLS[0];
-  _orgTemplate.workers.push({id:_orgTemplate.nextWid++,name:name,color:col,gid:_orgWorkerGid,tid:_orgWorkerTid});
+  var globalId=document.getElementById('ogw-gid').value.trim()||undefined;
+  if(window._editingOrgWorkerId){
+    var w=_orgTemplate.workers.find(function(x){return x.id===window._editingOrgWorkerId;});
+    if(w){w.name=name;w.color=col;w.globalId=globalId;}
+    window._editingOrgWorkerId=null;
+  } else {
+    _orgTemplate.workers.push({id:_orgTemplate.nextWid++,name:name,color:col,gid:_orgWorkerGid,tid:_orgWorkerTid,globalId:globalId});
+  }
   closeOrgWorkerModal();renderOrgTree();
 }
 function addOrgWorker(gid,tid){openOrgWorkerModal(gid,tid);}
+function editOrgWorker(id){
+  var w=_orgTemplate.workers.find(function(x){return x.id===id;});if(!w)return;
+  var g=_orgTemplate.groups.find(function(x){return x.id===w.gid;});
+  var shades=g&&g.color?orgGroupShades(g.color):COLS;
+  _orgWorkerGid=w.gid;_orgWorkerTid=w.tid||null;
+  document.getElementById('ogw-name').value=w.name;
+  document.getElementById('ogw-gid').value=w.globalId||'';
+  buildOrgColors('ogw-colors',w.color||shades[2]||shades[0],shades);
+  // mark current color
+  document.querySelectorAll('#ogw-colors .org-copt').forEach(function(c){
+    c.classList.toggle('on',c.dataset.hex===w.color);
+  });
+  // override save to update existing
+  window._editingOrgWorkerId=id;
+  document.getElementById('orgWorkerModal').classList.add('open');
+  setTimeout(function(){document.getElementById('ogw-name').focus();},50);
+}
 function delOrgWorker(id){
   _orgTemplate.workers=_orgTemplate.workers.filter(function(x){return x.id!==id;});
   renderOrgTree();
