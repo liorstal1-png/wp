@@ -1336,7 +1336,8 @@ function render(){
 
               var _col=matchedGanttProj?matchedGanttProj.color:(planWorker.color||'#378ADD');
               var _tb=document.createElement('div');
-              _tb.style.cssText='position:absolute;top:3px;left:'+_tx+'px;width:'+_tw+'px;height:16px;border-radius:3px;background:'+_col+';opacity:.85;pointer-events:none;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.35);'+(hasMismatch?'outline:2px dashed #E24B4A;outline-offset:-1px;':'');
+              var _mismatchStyle=hasMismatch?'box-shadow:inset 0 0 0 2px #E24B4A;background:#E24B4A;opacity:0.7;':'';
+              _tb.style.cssText='position:absolute;top:3px;left:'+_tx+'px;width:'+_tw+'px;height:16px;border-radius:3px;background:'+_col+';opacity:.85;pointer-events:none;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.35);'+_mismatchStyle;
               _tb.title=(hasMismatch?'⚠️ הפרויקט בשיבוץ לא תואם לתוכנית העבודה\n':'')+task.name+'\n'+task.start+' → '+task.end;
               var _tl=document.createElement('div');
               _tl.style.cssText='font-size:9px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:16px;direction:rtl;';
