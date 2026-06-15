@@ -1307,19 +1307,37 @@ function render(){
             var planWorker=planWorkers.find(function(pw){return pw.globalId&&pw.globalId===w.globalId;});
             if(!planWorker)return;
             planTasks.filter(function(t){return +t.wid===+planWorker.id;}).forEach(function(task){
-              // mirror מנוסחת planner (RTL→LTR):
-              // planner: right=dateRight(start), width=weeks*WW-2
-              // LTR:     left=TW-dateRight(start)-width
               var _days=pd(task.end).getTime()-pd(task.start).getTime();
               var _weeks=Math.max(1,Math.round((_days/86400000-6)/7)+1);
               var _dr=Math.round(diffW(TL_START,pd(task.start))*WW_);
               var _tw=_weeks*WW_-2;
               var _tx=TW-_dr-_tw;
               if(_tx+_tw<0||_tx>TW)return;
+
+              // בדוק התאמה: האם הפרויקט בשיבוץ שהעובד משובץ אליו בטווח זה תואם לפרויקט התוכנית?
+              var taskStart=pd(task.start).getTime();
+              var taskEnd=pd(task.end).getTime();
+              // מצא assignments של העובד שחופפים לטווח המשימה
+              var overlappingAssignments=D.assignments.filter(function(a){
+                return String(a.workerId)===String(w.id)&&
+                  pd(a.start).getTime()<=taskEnd&&pd(a.end).getTime()>=taskStart;
+              });
+              // בדוק אם אחד מהם שייך לפרויקט שתואם את ה-globalId של תוכנית העבודה
+              var hasMismatch=true;
+              if(projGlobalId){
+                hasMismatch=!overlappingAssignments.some(function(a){
+                  var ganttProj=D.projects.find(function(gp){return gp.id===a.projectId;});
+                  return ganttProj&&ganttProj.globalId&&ganttProj.globalId===projGlobalId;
+                });
+              } else {
+                // אין globalId לתוכנית — תמיד mismatch
+                hasMismatch=true;
+              }
+
               var _col=matchedGanttProj?matchedGanttProj.color:(planWorker.color||'#378ADD');
               var _tb=document.createElement('div');
-              _tb.style.cssText='position:absolute;top:3px;left:'+_tx+'px;width:'+_tw+'px;height:16px;border-radius:3px;background:'+_col+';opacity:.85;pointer-events:none;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.35);'+((!matchedGanttProj)?'outline:2px dashed #E24B4A;outline-offset:-1px;':'');
-              _tb.title=(matchedGanttProj?'':'\u26a0\ufe0f \u05d0\u05d9\u05df \u05e4\u05e8\u05d5\u05d9\u05d9\u05e7\u05d8 \u05de\u05ea\u05d0\u05d9\u05dd\n')+task.name+'\n'+task.start+' \u2192 '+task.end;
+              _tb.style.cssText='position:absolute;top:3px;left:'+_tx+'px;width:'+_tw+'px;height:16px;border-radius:3px;background:'+_col+';opacity:.85;pointer-events:none;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.35);'+(hasMismatch?'outline:2px dashed #E24B4A;outline-offset:-1px;':'');
+              _tb.title=(hasMismatch?'⚠️ הפרויקט בשיבוץ לא תואם לתוכנית העבודה\n':'')+task.name+'\n'+task.start+' → '+task.end;
               var _tl=document.createElement('div');
               _tl.style.cssText='font-size:9px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:16px;direction:rtl;';
               _tl.textContent=task.name;
