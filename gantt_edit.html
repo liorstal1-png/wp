@@ -1306,13 +1306,16 @@ function render(){
             var planWorker=planWorkers.find(function(pw){return pw.globalId&&pw.globalId===w.globalId;});
             if(!planWorker)return;
             planTasks.filter(function(t){return +t.wid===+planWorker.id;}).forEach(function(task){
-              var _tx=dateX(task.end);
-              var _txS=dateX(task.start);
+              // חישוב זהה לאופן שגנט מחשב assignments — עיגול לשבוע שלם
+              var _wiStart=Math.round(diffW(TL_START,pd(task.start)));
+              var _wiEnd=Math.round(diffW(TL_START,pd(task.end)));
+              var _txS=(TL_WEEKS-1-_wiStart)*WW_; // right edge (start)
+              var _tx=(TL_WEEKS-1-_wiEnd)*WW_;    // left edge (end)
               var _tw=Math.max(_txS-_tx+WW_,WW_*0.4);
               if(_tx+_tw<0||_tx>TW)return;
               var _col=matchedGanttProj?matchedGanttProj.color:(planWorker.color||'#378ADD');
               var _tb=document.createElement('div');
-              _tb.style.cssText='position:absolute;top:3px;left:'+_tx+'px;width:'+(_tw-2)+'px;height:16px;border-radius:3px;background:'+_col+';opacity:.82;pointer-events:none;'+((!matchedGanttProj)?'outline:2px dashed #E24B4A;outline-offset:-1px;':'');
+              _tb.style.cssText='position:absolute;top:3px;left:'+_tx+'px;width:'+(_tw-2)+'px;height:16px;border-radius:3px;background:'+_col+';opacity:.85;pointer-events:none;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.35);'+((!matchedGanttProj)?'outline:2px dashed #E24B4A;outline-offset:-1px;':'');
               _tb.title=(matchedGanttProj?'':'\u26a0\ufe0f \u05d0\u05d9\u05df \u05e4\u05e8\u05d5\u05d9\u05d9\u05e7\u05d8 \u05de\u05ea\u05d0\u05d9\u05dd\n')+task.name+'\n'+task.start+' \u2192 '+task.end;
               var _tl=document.createElement('div');
               _tl.style.cssText='font-size:9px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:16px;direction:rtl;';
