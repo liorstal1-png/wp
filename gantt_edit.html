@@ -1306,10 +1306,11 @@ function render(){
             var planWorker=planWorkers.find(function(pw){return pw.globalId&&pw.globalId===w.globalId;});
             if(!planWorker)return;
             planTasks.filter(function(t){return +t.wid===+planWorker.id;}).forEach(function(task){
-              // בדיוק כמו dateX של הגנט: (TL_WEEKS-1-diffW(TL_START,pd(s)))*WW()
-              var _tx=dateX(task.end);
-              var _txS=dateX(task.start);
-              var _tw=Math.max(_txS-_tx+WW_,WW_*0.4);
+              // planner שומר end=יום שישי של השבוע האחרון
+              // weeks זהה לplanner
+              var _weeks=Math.max(1,Math.round((pd(task.end).getTime()-pd(task.start).getTime()-6*86400000)/(7*86400000))+1);
+              var _tx=dateX(task.start)-(_weeks-1)*WW_; // left edge (end בגנט LTR)
+              var _tw=_weeks*WW_-2;
               if(_tx+_tw<0||_tx>TW)return;
               var _col=matchedGanttProj?matchedGanttProj.color:(planWorker.color||'#378ADD');
               var _tb=document.createElement('div');
