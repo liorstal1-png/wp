@@ -602,6 +602,7 @@ body:not(.edit-mode) .edit-only{display:none!important;}
     <div class="mbody">
       <div class="fld"><label>שם פרויקט</label><input id="ep-name" placeholder="שם..."/></div>
       <div class="fld"><label>קוד פרויקט</label><input id="ep-code" placeholder="P001..." style="font-family:monospace;"/></div>
+      <div class="fld"><label>מזהה לקישור תוכנית עבודה <span style="font-size:10px;color:var(--mut);font-weight:400;">(globalId)</span></label><input id="ep-gid" placeholder="PROJ001..." style="font-family:monospace;"/></div>
       <div class="fld"><label>מנהל פרויקט</label><input id="ep-pm" placeholder="שם מנהל..."/></div>
       <div class="fld"><label>סיווג</label>
         <select id="ep-class"><option value="">--</option><option value="לקוח">לקוח</option><option value="פנימי">פנימי</option></select>
@@ -1306,15 +1307,18 @@ function render(){
             var planWorker=planWorkers.find(function(pw){return pw.globalId&&pw.globalId===w.globalId;});
             if(!planWorker)return;
             planTasks.filter(function(t){return +t.wid===+planWorker.id;}).forEach(function(task){
-              // planner שומר end=יום שישי של השבוע האחרון
-              // weeks זהה לplanner
-              var _weeks=Math.max(1,Math.round((pd(task.end).getTime()-pd(task.start).getTime()-6*86400000)/(7*86400000))+1);
-              var _tx=dateX(task.start)-(_weeks-1)*WW_; // left edge (end בגנט LTR)
+              // mirror מנוסחת planner (RTL→LTR):
+              // planner: right=dateRight(start), width=weeks*WW-2
+              // LTR:     left=TW-dateRight(start)-width
+              var _days=pd(task.end).getTime()-pd(task.start).getTime();
+              var _weeks=Math.max(1,Math.round((_days/86400000-6)/7)+1);
+              var _dr=Math.round(diffW(TL_START,pd(task.start))*WW_);
               var _tw=_weeks*WW_-2;
+              var _tx=TW-_dr-_tw;
               if(_tx+_tw<0||_tx>TW)return;
               var _col=matchedGanttProj?matchedGanttProj.color:(planWorker.color||'#378ADD');
               var _tb=document.createElement('div');
-              _tb.style.cssText='position:absolute;top:3px;left:'+_tx+'px;width:'+(_tw-2)+'px;height:16px;border-radius:3px;background:'+_col+';opacity:.85;pointer-events:none;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.35);'+((!matchedGanttProj)?'outline:2px dashed #E24B4A;outline-offset:-1px;':'');
+              _tb.style.cssText='position:absolute;top:3px;left:'+_tx+'px;width:'+_tw+'px;height:16px;border-radius:3px;background:'+_col+';opacity:.85;pointer-events:none;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.35);'+((!matchedGanttProj)?'outline:2px dashed #E24B4A;outline-offset:-1px;':'');
               _tb.title=(matchedGanttProj?'':'\u26a0\ufe0f \u05d0\u05d9\u05df \u05e4\u05e8\u05d5\u05d9\u05d9\u05e7\u05d8 \u05de\u05ea\u05d0\u05d9\u05dd\n')+task.name+'\n'+task.start+' \u2192 '+task.end;
               var _tl=document.createElement('div');
               _tl.style.cssText='font-size:9px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:16px;direction:rtl;';
@@ -2140,6 +2144,7 @@ function openEditProject(pid){
   document.getElementById('ep-status').value=p.status||'בביצוע';
   if(document.getElementById('ep-code'))document.getElementById('ep-code').value=p.code||'';
   if(document.getElementById('ep-pm'))document.getElementById('ep-pm').value=p.pm||'';
+  if(document.getElementById('ep-gid'))document.getElementById('ep-gid').value=p.globalId||'';
   if(document.getElementById('ep-class'))document.getElementById('ep-class').value=p.classification||'';
   om('epmodal');setTimeout(function(){document.getElementById('ep-name').focus();},200);
 }
@@ -2165,6 +2170,7 @@ function saveEditProject(){
   p.code=document.getElementById('ep-code')?document.getElementById('ep-code').value.trim():'';
   p.classification=document.getElementById('ep-class')?document.getElementById('ep-class').value:'';
   p.pm=document.getElementById('ep-pm')?document.getElementById('ep-pm').value.trim():'';
+  p.globalId=document.getElementById('ep-gid')?document.getElementById('ep-gid').value.trim()||undefined:undefined;
   var parentId=document.getElementById('ep-parent')?document.getElementById('ep-parent').value:'';
   if(parentId){p.parentId=parentId;}else{delete p.parentId;}
   p.color=getChosenChildColorEp();
