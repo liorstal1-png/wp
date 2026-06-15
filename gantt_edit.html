@@ -602,7 +602,6 @@ body:not(.edit-mode) .edit-only{display:none!important;}
     <div class="mbody">
       <div class="fld"><label>שם פרויקט</label><input id="ep-name" placeholder="שם..."/></div>
       <div class="fld"><label>קוד פרויקט</label><input id="ep-code" placeholder="P001..." style="font-family:monospace;"/></div>
-      <div class="fld"><label>מזהה פרויקט <span style="font-size:10px;color:var(--mut);font-weight:400;">(לקישור עם תוכנית עבודה)</span></label><input id="ep-gid" placeholder="PROJ001..." style="font-family:monospace;"/></div>
       <div class="fld"><label>מנהל פרויקט</label><input id="ep-pm" placeholder="שם מנהל..."/></div>
       <div class="fld"><label>סיווג</label>
         <select id="ep-class"><option value="">--</option><option value="לקוח">לקוח</option><option value="פנימי">פנימי</option></select>
@@ -849,7 +848,6 @@ function render(){
   var TW=totalW(), WW_=WW();
   var gs=getGroups();
   var BL_ROW_H=(_activeBL!==null&&getBaselines()[_activeBL])?20:0;
-  var TP_ROW_H=(_tpActive&&_tpActive.size>0)?22:0;
   // חשב גובה שורת אבני דרך
   _msVisible=D.milestones.filter(function(ms){
     var _fpA=(FP_SET&&FP_SET.size>0)?FP_SET:(FP!=='all'?new Set([FP]):null);
@@ -862,7 +860,7 @@ function render(){
   var _msMaxStack=Object.keys(_msXMap).reduce(function(m,k){return Math.max(m,_msXMap[k]);},0)||0;
   var MS_BASE_H=28, MS_ITEM_H=22;
   var MS_ROW_H=SHOW_MS_ROW?Math.max(MS_BASE_H, MS_BASE_H+(_msMaxStack-1)*MS_ITEM_H):MS_BASE_H;
-  var totalH=0; gs.forEach(function(g){totalH+=GH+g.workers.length*(RH+BL_ROW_H+TP_ROW_H);});
+  var totalH=0; gs.forEach(function(g){totalH+=GH+g.workers.length*(RH+BL_ROW_H);});
   var totalHwithMs=(_msVisible.length>0?MS_ROW_H:0)+totalH;
 
   document.getElementById('tlinner').style.width=TW+'px';
@@ -1393,8 +1391,7 @@ function renderSidebar(gs){
         if(!_ok2)return;
       }
       var _blH2=(_activeBL!==null&&getBaselines()[_activeBL])?20:0;
-      var _tpH2=(_tpActive&&_tpActive.size>0)?22:0;
-      var row=document.createElement('div'); row.className='wrow'; row.style.height=(RH+_blH2+_tpH2)+'px';
+      var row=document.createElement('div'); row.className='wrow'; row.style.height=(RH+_blH2)+'px';
       var nm=document.createElement('div'); nm.className='wname'; nm.textContent=w.name; nm.title=w.name;
       var eb=document.createElement('button'); eb.className='wedit edit-only'; eb.textContent='✏️';
       eb.onclick=function(e){e.stopPropagation();_wrkId=w.id;cEditWrk();};
@@ -2101,7 +2098,6 @@ function openEditProject(pid){
   if(document.getElementById('ep-code'))document.getElementById('ep-code').value=p.code||'';
   if(document.getElementById('ep-pm'))document.getElementById('ep-pm').value=p.pm||'';
   if(document.getElementById('ep-class'))document.getElementById('ep-class').value=p.classification||'';
-  if(document.getElementById('ep-gid'))document.getElementById('ep-gid').value=p.globalId||'';
   om('epmodal');setTimeout(function(){document.getElementById('ep-name').focus();},200);
 }
 var selEpCol=0;
@@ -2126,7 +2122,6 @@ function saveEditProject(){
   p.code=document.getElementById('ep-code')?document.getElementById('ep-code').value.trim():'';
   p.classification=document.getElementById('ep-class')?document.getElementById('ep-class').value:'';
   p.pm=document.getElementById('ep-pm')?document.getElementById('ep-pm').value.trim():'';
-  p.globalId=document.getElementById('ep-gid')?document.getElementById('ep-gid').value.trim()||undefined:undefined;
   var parentId=document.getElementById('ep-parent')?document.getElementById('ep-parent').value:'';
   if(parentId){p.parentId=parentId;}else{delete p.parentId;}
   p.color=getChosenChildColorEp();
@@ -3843,48 +3838,57 @@ function buildTPPanel(){
 // Call this from render() to draw overlays after rows are built
 function renderTPOverlays(){
   document.querySelectorAll('.tp-blk,.tp-row').forEach(function(el){el.remove();});
-  if(_tpActive.size === 0) return;
 
   var TW = totalW(), WW_ = WW();
-  var projects = getTPProjects().filter(function(p){ return _tpActive.has(p.key); });
-  if(!projects.length) return;
+  var gs = getGroups();
 
-  // קבץ משימות לפי ganttWorkerId
+  // אסוף משימות לפי ganttWorkerId — רק אם יש פרויקטים פעילים
   var byWorker = {};
+  if(_tpActive && _tpActive.size > 0){
+    var projects = getTPProjects().filter(function(p){ return _tpActive.has(p.key); });
 
-  projects.forEach(function(proj){
-    var planWorkers = proj.data.workers || [];
-    var planTasks   = proj.data.tasks   || [];
-    // globalId של הפרויקט נמצא ב-meta שנשמר בתוך data
-    var projGlobalId = proj.key ? (function(){
-      try{var raw=localStorage.getItem(proj.key);if(!raw)return undefined;var p=JSON.parse(raw);return p&&p.meta?p.meta.globalId:undefined;}catch(e){return undefined;}
-    })() : undefined;
+    projects.forEach(function(proj){
+      var planWorkers = proj.data.workers || [];
+      var planTasks   = proj.data.tasks   || [];
+      // קרא globalId של הפרויקט מה-meta שב-localStorage
+      var projGlobalId;
+      try{
+        var raw=localStorage.getItem(proj.key);
+        if(raw){var pm=JSON.parse(raw);projGlobalId=pm&&pm.meta?pm.meta.globalId:undefined;}
+      }catch(e){}
+      var matchedGanttProj = projGlobalId
+        ? D.projects.find(function(gp){ return gp.globalId && gp.globalId === projGlobalId; })
+        : null;
 
-    var matchedGanttProj = projGlobalId
-      ? D.projects.find(function(gp){ return gp.globalId && gp.globalId === projGlobalId; })
-      : null;
-
-    planTasks.forEach(function(task){
-      var planWorker = planWorkers.find(function(w){ return +w.id === +task.wid; });
-      if(!planWorker || !planWorker.globalId) return;
-      var ganttWorker = D.workers.find(function(w){ return w.globalId && w.globalId === planWorker.globalId; });
-      if(!ganttWorker) return;
-      var wid = String(ganttWorker.id);
-      if(!byWorker[wid]) byWorker[wid] = [];
-      var col = matchedGanttProj ? matchedGanttProj.color : (planWorker.color || '#378ADD');
-      byWorker[wid].push({task:task, col:col, mismatch:!matchedGanttProj, projName:proj.name});
+      planTasks.forEach(function(task){
+        var planWorker = planWorkers.find(function(w){ return +w.id === +task.wid; });
+        if(!planWorker || !planWorker.globalId) return;
+        var ganttWorker = D.workers.find(function(w){ return w.globalId && w.globalId === planWorker.globalId; });
+        if(!ganttWorker) return;
+        var wid = String(ganttWorker.id);
+        if(!byWorker[wid]) byWorker[wid] = [];
+        var col = matchedGanttProj ? matchedGanttProj.color : (planWorker.color || '#378ADD');
+        byWorker[wid].push({task:task, col:col, mismatch:!matchedGanttProj, projName:proj.name});
+      });
     });
-  });
+  }
 
-  Object.keys(byWorker).forEach(function(wid){
-    var tlRow = document.querySelector('.tlrow[data-wid="'+wid+'"]');
-    if(!tlRow) return;
-    var items = byWorker[wid];
+  // הוסף שורת tp לכל עובד בכל מקרה (לסנכרון גובה)
+  // אבל רק אם _tpActive פעיל
+  if(!_tpActive || _tpActive.size === 0) return;
 
-    // שורת tp מתחת ל-tlrow
+  var tlBody = document.getElementById('tlbody');
+  if(!tlBody) return;
+
+  // עבור על כל tlrow של עובד לפי סדר ה-DOM
+  var allRows = tlBody.querySelectorAll('.tlrow[data-wid]');
+  allRows.forEach(function(tlRow){
+    var wid = tlRow.dataset.wid;
+    var items = byWorker[wid] || [];
+
     var tpRow = document.createElement('div');
     tpRow.className = 'tp-row';
-    tpRow.style.cssText = 'position:relative;display:flex;direction:ltr;width:'+TW+'px;height:22px;border-bottom:1px solid #E0DED8;background:#F5F4F0;overflow:hidden;';
+    tpRow.style.cssText = 'position:relative;display:flex;direction:ltr;width:'+TW+'px;height:22px;border-bottom:1px solid #E0DED8;background:#F2F1EC;overflow:hidden;flex-shrink:0;';
 
     // תאי רקע
     for(var i=TL_WEEKS-1;i>=0;i--){
@@ -3893,24 +3897,27 @@ function renderTPOverlays(){
       tpRow.appendChild(c);
     }
 
-    // בלוקי משימות
+    // בלוקי משימות — תיקון חישוב: dateX מחזיר left בסיסי של LTR
+    // dateX(end) = left edge, dateX(start)+WW = right edge
+    // width = dateX(start) - dateX(end) + WW
     items.forEach(function(item){
       var task = item.task;
-      var x = dateX(task.end);
-      var xStart = dateX(task.start);
-      var width = Math.max(xStart - x + WW_, WW_ * 0.4);
-      if(x + width < 0 || x > TW) return;
+      var xEnd   = dateX(task.end);    // left edge of block
+      var xStart = dateX(task.start);  // right edge - WW
+      var width  = Math.max(xStart - xEnd + WW_, WW_ * 0.4);
+      if(xEnd + width < 0 || xEnd > TW) return;
 
       var blk = document.createElement('div');
       blk.className = 'tp-blk';
       blk.style.cssText =
-        'left:'+x+'px;'+
+        'left:'+xEnd+'px;'+
         'width:'+(width-2)+'px;'+
         'top:3px;'+
         'height:16px;'+
         'background:'+item.col+';'+
-        'opacity:0.75;'+
+        'opacity:0.8;'+
         'border-radius:3px;'+
+        'pointer-events:auto;'+
         (item.mismatch ? 'outline:2px dashed #E24B4A;outline-offset:-1px;' : '');
 
       var lbl = document.createElement('div');
@@ -3918,20 +3925,22 @@ function renderTPOverlays(){
       lbl.textContent = task.name;
       blk.appendChild(lbl);
 
-      if(item.mismatch){
-        blk.title = '⚠️ לא נמצא פרויקט מתאים בשיבוץ\n'+task.name+'\n'+task.start+' → '+task.end;
-      } else {
-        blk.title = task.name+'\n'+task.start+' → '+task.end+'\n'+item.projName;
-      }
+      blk.title = (item.mismatch ? '⚠️ לא נמצא פרויקט מתאים\n' : '') +
+        task.name + '\n' + task.start + ' → ' + task.end;
 
       tpRow.appendChild(blk);
     });
 
-    // הכנס את השורה אחרי tlRow
-    if(tlRow.nextSibling){
-      tlRow.parentNode.insertBefore(tpRow, tlRow.nextSibling);
+    // הכנס אחרי tlRow (ואחרי bl-row אם קיים)
+    var insertAfter = tlRow;
+    while(insertAfter.nextSibling && insertAfter.nextSibling.classList &&
+          (insertAfter.nextSibling.classList.contains('bl-row'))){
+      insertAfter = insertAfter.nextSibling;
+    }
+    if(insertAfter.nextSibling){
+      tlBody.insertBefore(tpRow, insertAfter.nextSibling);
     } else {
-      tlRow.parentNode.appendChild(tpRow);
+      tlBody.appendChild(tpRow);
     }
   });
 }
