@@ -26,7 +26,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .main{display:flex;flex:1;overflow:hidden;min-height:0;direction:rtl;}
 /* sidebar */
 .sidebar{width:200px;min-width:80px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--brd);background:var(--sur);z-index:20;overflow:hidden;}
-.sidebar-hdr{height:88px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:11px;font-weight:700;flex-shrink:0;}
+.sidebar-hdr{height:112px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:11px;font-weight:700;flex-shrink:0;}
 .sidebar-body{flex:1;overflow-y:auto;overflow-x:hidden;}
 .sidebar-body::-webkit-scrollbar{width:4px;}
 .sidebar-body::-webkit-scrollbar-thumb{background:var(--brd);border-radius:2px;}
@@ -58,14 +58,15 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .sprrow{display:flex;border-bottom:1px solid var(--brd);background:var(--bg);direction:rtl;height:34px;}
 .spr-empty{flex-shrink:0;height:34px;}
 .spr-block{flex-shrink:0;height:34px;display:flex;align-items:center;padding:0 1px;}
-.spr-inner{background:#1E3A5F;color:#fff;font-size:11px;font-weight:700;border-radius:4px;height:28px;display:flex;align-items:center;padding:0 8px;cursor:pointer;width:100%;overflow:hidden;white-space:nowrap;gap:4px;}
-.spr-inner:hover{background:#2a4f80;}
+.spr-inner{background:#6B7280;color:#fff;font-size:11px;font-weight:700;border-radius:4px;height:28px;display:flex;align-items:center;padding:0 8px;cursor:pointer;width:100%;overflow:hidden;white-space:nowrap;gap:4px;}
+.spr-inner:hover{background:#4B5563;}
 .spr-inner span{flex:1;overflow:hidden;text-overflow:ellipsis;}
 .spr-del{opacity:0;background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;border-radius:3px;padding:0 4px;font-size:10px;flex-shrink:0;}
 .spr-inner:hover .spr-del{opacity:1;}
 .mrow{display:flex;border-bottom:1px solid var(--brd);background:var(--sur);direction:rtl;height:28px;}
 .mcell{border-left:2px solid var(--brd);display:flex;align-items:center;justify-content:center;padding:0 4px;font-size:11px;font-weight:700;color:var(--mut);white-space:nowrap;flex-shrink:0;overflow:hidden;}
 .wkrow{display:flex;border-bottom:1px solid var(--brd);background:var(--sur);direction:rtl;height:26px;}
+.msrow{position:relative;height:24px;border-bottom:1px solid var(--brd);background:var(--sur);direction:rtl;overflow:visible;}
 .wkcell{border-left:1px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--fnt);flex-shrink:0;}
 .wkcell.tw{background:#EBF4FF;}
 .wkcell.tw span{color:var(--acc);font-weight:700;}
@@ -86,14 +87,16 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .blk.drag{opacity:.7;cursor:grabbing;z-index:100;}
 .blk.sel{outline:2px solid #fff;outline-offset:-2px;filter:brightness(1.15);}
 .btitle{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;font-size:11px;pointer-events:none;}
+.blk-note-dot{font-size:13px;font-weight:900;color:#FF4444;flex-shrink:0;pointer-events:auto;line-height:1;text-shadow:0 0 4px rgba(0,0,0,.4);cursor:default;padding:0 3px;}
+.note-tooltip{position:fixed;background:#1E2A3A;color:#fff;border-radius:8px;padding:10px 14px;font-family:'Heebo',sans-serif;font-size:13px;line-height:1.6;max-width:220px;white-space:pre-wrap;pointer-events:none;z-index:600;box-shadow:0 4px 16px rgba(0,0,0,.35);direction:rtl;display:none;}
 .rhandle-r{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-l{position:absolute;left:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:2;}
 .rhandle-r:hover,.rhandle-l:hover{background:rgba(255,255,255,.4);}
-.blk-opts{opacity:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;padding:1px 4px;border-radius:3px;color:#fff;flex-shrink:0;}
-.blk:hover .blk-opts{opacity:1;}
-.blk-del{opacity:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;padding:1px 5px;border-radius:3px;color:#fff;flex-shrink:0;}
-.blk:hover .blk-del{opacity:1;}
-.blk.sel .blk-del{opacity:1;}
+.blk-opts{opacity:0;width:0;overflow:hidden;padding:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;border-radius:3px;color:#fff;flex-shrink:0;transition:opacity .1s;}
+.blk:hover .blk-opts{opacity:1;width:auto;padding:1px 4px;}
+.blk-del{opacity:0;width:0;overflow:hidden;padding:0;background:rgba(255,255,255,.22);border:none;cursor:pointer;font-size:10px;border-radius:3px;color:#fff;flex-shrink:0;transition:opacity .1s;}
+.blk:hover .blk-del{opacity:1;width:auto;padding:1px 5px;}
+.blk.sel .blk-del{opacity:1;width:auto;padding:1px 5px;}
 /* lasso */
 .lasso{position:fixed;border:1.5px dashed var(--acc);background:rgba(55,138,221,.07);pointer-events:none;z-index:50;}
 /* sel toolbar */
@@ -147,7 +150,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 <div class="topbar">
   <button class="btn" onclick="goBackHome()" style="font-size:13px;padding:6px 10px;">← חזרה</button>
   <div class="tsep"></div>
-  <h1 id="plannerTitle">📋 תכנית עבודה</h1>
+  <h1 id="plannerTitle">📋 תכנית עבודה [v42]</h1>
   <div class="tsep"></div>
   <div style="display:flex;align-items:center;gap:3px;">
     <button class="zbtn" id="zoomOut">−</button>
@@ -161,11 +164,16 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
   <button class="btn" id="addMsBtn">🚩 אבן דרך</button>
   <div class="tsep"></div>
   <button class="btn" id="rangeBtn">📅 טווח</button>
+  <button class="btn btn-sm" onclick="applyQuickRange(12)">3M</button>
+  <button class="btn btn-sm" onclick="applyQuickRange(24)">6M</button>
+  <button class="btn btn-sm" onclick="applyQuickRange(52)">שנה</button>
+  <button class="btn btn-sm" onclick="applyQuickRange(104)">2Y</button>
   <button class="btn" id="modeBtn">🔢 שבועות</button>
   <div class="spacer"></div>
   <button class="btn" id="undoBtn" title="Ctrl+Z">↩ ביטול</button>
   <button class="btn" id="clearDepsBtn" title="נקה תלויות">🔗 נקה תלויות</button>
   <button class="btn" id="summaryBtn">📊 סיכום</button>
+  <button class="btn" id="tasksTableBtn">📋 פירוט משימות</button>
   <button class="btn" id="exportBtn">📥 ייצוא</button>
 </div>
 
@@ -184,6 +192,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
         <div class="sprrow" id="sprrow"></div>
         <div class="mrow" id="mrow"></div>
         <div class="wkrow" id="wkrow"></div>
+        <div class="msrow" id="msrow"></div>
       </div>
       <div class="tlbody" id="tlbody"></div>
     </div>
@@ -229,7 +238,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
     <div class="mhdr"><span class="mtitle" id="wm-title">הוסף עובד</span><button class="mx" onclick="cm('wmodal')">✕</button></div>
     <div class="mbody">
       <div class="fld"><label>שם</label><input id="wm-name" placeholder="שם העובד..."/></div>
-      <div class="fld"><label>מזהה עובד <span style="font-size:10px;color:var(--mut);font-weight:400;">(לקישור עם שיבוץ)</span></label><input id="wm-gid" placeholder="למשל: EMP001, alon.cohen..." style="font-family:monospace;"/></div>
+      <div class="fld"><label>מזהה עובד <span style="font-size:10px;color:var(--mut);font-weight:400;">(לקישור עם שיבוץ)</span></label><input id="wm-gid" placeholder="EMP001, alon.cohen..." style="font-family:monospace;"/></div>
       <div class="fld"><label>קבוצה</label><select id="wm-group"></select></div>
       <div class="fld"><label>צוות (אופציונלי)</label><select id="wm-team"></select></div>
       <div class="fld"><label>צבע</label><div class="crow" id="wm-colors"></div></div>
@@ -245,17 +254,17 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
     <div class="mbody">
       <div class="fld"><label>שם משימה</label><input id="tsm-name" placeholder="שם..."/></div>
       <div class="fld"><label>עובד</label><select id="tsm-worker"></select></div>
-      <div style="display:flex;gap:8px;align-items:flex-end;">
-        <div class="fld" style="flex:1"><label>התחלה</label><input id="tsm-start" type="date" oninput="updateTaskWeeks()"/></div>
-        <div class="fld" style="flex:0 0 64px;text-align:center;">
+      <div style="display:flex;gap:6px;align-items:flex-end;">
+        <div class="fld" style="flex:1;min-width:0;"><label>התחלה</label><input id="tsm-start" type="date" oninput="updateTaskWeeks()" style="width:100%;"/></div>
+        <div class="fld" style="flex:0 0 86px;text-align:center;">
           <label style="display:block;">שבועות</label>
           <div style="display:flex;align-items:center;gap:3px;">
             <button type="button" onclick="var w=document.getElementById('tsm-weeks');w.value=Math.max(1,+w.value-1);updateTaskEnd();" style="width:22px;height:34px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);cursor:pointer;font-size:14px;padding:0;">−</button>
-            <input type="number" id="tsm-weeks" min="1" max="52" value="2" style="width:32px;text-align:center;direction:ltr;padding:6px 2px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);font-family:Heebo,sans-serif;font-size:13px;" oninput="updateTaskEnd()"/>
+            <input type="number" id="tsm-weeks" min="1" max="52" value="2" style="width:36px;text-align:center;direction:ltr;padding:6px 2px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);font-family:Heebo,sans-serif;font-size:13px;" oninput="updateTaskEnd()"/>
             <button type="button" onclick="var w=document.getElementById('tsm-weeks');w.value=+w.value+1;updateTaskEnd();" style="width:22px;height:34px;border:1px solid var(--brd);border-radius:4px;background:var(--bg);cursor:pointer;font-size:14px;padding:0;">+</button>
           </div>
         </div>
-        <div class="fld" style="flex:1"><label>סיום</label><input id="tsm-end" type="date" oninput="updateTaskWeeks()"/></div>
+        <div class="fld" style="flex:1;min-width:0;"><label>סיום</label><input id="tsm-end" type="date" oninput="updateTaskWeeks()" style="width:100%;"/></div>
       </div>
       <div class="fld"><label>צבע מותאם</label><div class="crow" id="tsm-colors"></div></div>
 
@@ -333,6 +342,20 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
   </div>
 </div>
 
+<!-- Tasks table modal -->
+<div class="ov" id="tasksTableModal" onclick="if(event.target===this)document.getElementById('tasksTableModal').classList.remove('open')">
+  <div class="modal" style="max-width:640px;">
+    <div class="mhdr">
+      <span class="mtitle">📋 פירוט משימות</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn btn-sm" onclick="exportTasksTableXlsx()">📥 Excel</button>
+        <button class="mx" onclick="document.getElementById('tasksTableModal').classList.remove('open')">✕</button>
+      </div>
+    </div>
+    <div class="mbody" id="tasksTableBody" style="max-height:65vh;overflow-y:auto;padding:0;"></div>
+  </div>
+</div>
+
 <!-- Note modal -->
 <div class="ov" id="noteModal" onclick="if(event.target===this)cm('noteModal')">
   <div class="modal" style="max-width:340px;">
@@ -348,6 +371,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 </div>
 
 <div id="taskTooltip" style="position:fixed;z-index:500;pointer-events:none;display:none;max-width:180px;background:#1E2A3A;color:#fff;border-radius:6px;padding:6px 10px;font-family:Heebo,sans-serif;font-size:11px;line-height:1.5;box-shadow:0 2px 12px rgba(0,0,0,.3);direction:rtl;"></div>
+<div class="note-tooltip" id="noteTooltip"></div>
 <canvas id="depCanvas" style="position:fixed;top:0;left:0;pointer-events:none;z-index:50;"></canvas>
 <div class="ms-tooltip" id="msTooltip"></div>
 <div class="rollup-tip" id="rollupTip"></div>
@@ -430,12 +454,18 @@ function loadData(){
     if(o.collapsed){collapsed=o.collapsed;if(!collapsed.groups)collapsed.groups={};if(!collapsed.teams)collapsed.teams={};}
     if(o.MODE_WEEKS!==undefined)MODE_WEEKS=o.MODE_WEEKS;
     if(!D.groups)D.groups=[];if(!D.teams)D.teams=[];if(!D.sprints)D.sprints=[];if(!D.milestones)D.milestones=[];if(!D.nextMid)D.nextMid=1;if(!D.deps)D.deps=[];if(!D.nextDid)D.nextDid=1;
+    // sprints are computed on-the-fly — clear any stale saved ones
+    D.sprints=[];
     // clean orphaned deps immediately on load
     if(D.tasks&&D.deps){
       var tids=D.tasks.map(function(t){return +t.id;});
       D.deps=D.deps.filter(function(d){return tids.indexOf(+d.fromTid)!==-1&&tids.indexOf(+d.toTid)!==-1;});
     }
-    if(!D.nextSid)D.nextSid=1;if(!D.nextGid)D.nextGid=10;if(!D.nextTmid)D.nextTmid=20;
+    // normalize weeks for all tasks using same formula as summary
+    if(D.tasks){D.tasks.forEach(function(t){
+      t.weeks=Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime()-6*86400000)/(7*86400000))+1);
+      t.end=fd(addD(addW(pd(t.start),t.weeks-1),6));
+    });}
     return true;
   }catch(e){return false;}
 }
@@ -471,6 +501,7 @@ function render(){
   renderSprints(TW,WW_);
   renderMonths(TW,WW_);
   renderWeeks(TW,WW_);
+  var mr2=document.getElementById('msrow');if(mr2)mr2.style.width=TW+'px';
   renderSidebar();
   renderBody(TW,WW_);
   renderMilestones();
@@ -580,41 +611,36 @@ function renderSidebar(){
       el.className='tree-worker-row';
       var dot=document.createElement('div');dot.className='wdot';dot.style.background=row.obj.color;
       var nm=document.createElement('span');nm.className='wname-edit';nm.contentEditable='true';nm.spellcheck=false;nm.textContent=row.obj.name;
-      // globalId badge — קליק לעריכה
-      var gidWrap=document.createElement('div');
-      gidWrap.title='מזהה עובד לקישור עם שיבוץ';
-      gidWrap.style.cssText='display:flex;align-items:center;gap:2px;flex-shrink:0;';
       var gidBadge=document.createElement('span');
-      gidBadge.style.cssText='font-size:9px;font-family:monospace;color:var(--mut);background:var(--bg);border:1px solid var(--brd);border-radius:3px;padding:1px 4px;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;';
+      gidBadge.style.cssText='font-size:9px;font-family:monospace;padding:1px 5px;border-radius:3px;border:1px solid var(--brd);cursor:pointer;background:var(--bg);color:'+(row.obj.globalId?'var(--acc)':'var(--mut)')+';flex-shrink:0;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
       gidBadge.textContent=row.obj.globalId||'+ ID';
-      gidBadge.title=row.obj.globalId?'מזהה: '+row.obj.globalId+' (לחץ לעריכה)':'הוסף מזהה עובד';
-      if(row.obj.globalId)gidBadge.style.color='var(--acc)';
+      gidBadge.title=row.obj.globalId?'מזהה: '+row.obj.globalId+' — לחץ לעריכה':'הוסף מזהה עובד';
       var del=document.createElement('button');del.className='row-del';del.textContent='×';
-      gidWrap.appendChild(gidBadge);
-      el.appendChild(dot);el.appendChild(nm);el.appendChild(gidWrap);el.appendChild(del);
+      el.appendChild(dot);el.appendChild(nm);el.appendChild(gidBadge);el.appendChild(del);
       (function(w){
         dot.addEventListener('click',function(e){e.stopPropagation();openCP(e,{type:'worker',wid:w.id});});
         nm.addEventListener('blur',function(){w.name=nm.textContent.trim()||w.name;saveData();});
-        // עריכת globalId inline
         gidBadge.addEventListener('click',function(e){
           e.stopPropagation();
           var inp=document.createElement('input');
-          inp.value=w.globalId||'';
-          inp.placeholder='EMP001...';
-          inp.style.cssText='font-size:9px;font-family:monospace;width:64px;padding:1px 4px;border:1px solid var(--acc);border-radius:3px;outline:none;background:#fff;color:var(--txt);';
-          gidWrap.replaceChild(inp,gidBadge);
-          inp.focus();inp.select();
-          function finishGid(){
+          inp.value=w.globalId||'';inp.placeholder='EMP001...';
+          inp.style.cssText='font-size:9px;font-family:monospace;width:62px;padding:1px 4px;border:1px solid var(--acc);border-radius:3px;outline:none;background:#fff;color:var(--txt);flex-shrink:0;';
+          el.replaceChild(inp,gidBadge);inp.focus();inp.select();
+          function finish(){
             var v=inp.value.trim()||undefined;
             w.globalId=v;
             gidBadge.textContent=v||'+ ID';
-            gidBadge.title=v?'מזהה: '+v+' (לחץ לעריכה)':'הוסף מזהה עובד';
             gidBadge.style.color=v?'var(--acc)':'var(--mut)';
-            gidWrap.replaceChild(gidBadge,inp);
+            gidBadge.title=v?'מזהה: '+v+' — לחץ לעריכה':'הוסף מזהה עובד';
+            el.replaceChild(gidBadge,inp);
             saveData();
           }
-          inp.addEventListener('blur',finishGid);
-          inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();inp.blur();}if(e.key==='Escape'){inp.value=w.globalId||'';inp.blur();}e.stopPropagation();});
+          inp.addEventListener('blur',finish);
+          inp.addEventListener('keydown',function(e){
+            if(e.key==='Enter'){e.preventDefault();inp.blur();}
+            if(e.key==='Escape'){inp.value=w.globalId||'';inp.blur();}
+            e.stopPropagation();
+          });
         });
         del.addEventListener('click',function(e){e.stopPropagation();if(!confirm('למחוק עובד?'))return;snapshot();D.workers=D.workers.filter(function(x){return x.id!==w.id;});D.tasks=D.tasks.filter(function(x){return x.wid!==w.id;});render();});
       })(row.obj);
@@ -623,14 +649,65 @@ function renderSidebar(){
   });
 }
 
+// ── SPRINT HELPERS ─────────────────────────────────────────────────────────
+// Returns sprint object for a given week index, purely by math — no loops, no cache issues.
+function getSprintForWeek(weekIndex){
+  var cfg;
+  try{cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');}catch(e){cfg={};}
+  if(!cfg||!cfg.startDate)return null;
+  var wps=cfg.weeksPerSprint||3;
+  var firstN=cfg.firstSprint||1;
+  var sDate=new Date(cfg.startDate+'T12:00:00');
+  var msPerSprint=wps*7*86400000;
+  var weekStart=wkDate(weekIndex); // already has hours:12 from addW
+  var msDiff=weekStart.getTime()-sDate.getTime();
+  if(msDiff<0)return null; // before first sprint
+  var idx=Math.floor(msDiff/msPerSprint);
+  var sprintStart=new Date(sDate.getTime()+idx*msPerSprint);
+  var sprintEnd=new Date(sprintStart.getTime()+msPerSprint-86400000);
+  return {
+    id:idx+1,
+    name:'Sprint '+(firstN+idx),
+    start:fd(sprintStart),
+    end:fd(sprintEnd),
+    _idx:idx
+  };
+}
+
 function renderSprints(TW,WW_){
   var row=document.getElementById('sprrow');row.innerHTML='';row.style.width=TW+'px';
+  // build per-week sprint array using pure math
   var ws=[];
-  for(var i=0;i<TL_WEEKS;i++){var wd=wkDate(i).getTime(),sp=null;for(var si=0;si<D.sprints.length;si++){var sv=D.sprints[si];if(wd>=pd(sv.start).getTime()&&wd<pd(sv.end).getTime()+7*86400000){sp=sv;break;}}ws.push(sp);}
+  var cfg;
+  try{cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');}catch(e){cfg={};}
+  var hasConfig=cfg&&cfg.startDate;
+  for(var i=0;i<TL_WEEKS;i++){
+    if(hasConfig){
+      ws.push(getSprintForWeek(i));
+    } else {
+      // fall back to manual sprints in D.sprints
+      var wd=wkDate(i).getTime(),sp=null;
+      for(var si=0;si<D.sprints.length;si++){
+        var sv=D.sprints[si];
+        if(wd>=pd(sv.start).getTime()&&wd<=pd(sv.end).getTime()){sp=sv;break;}
+      }
+      ws.push(sp);
+    }
+  }
   var i=0;
   while(i<TL_WEEKS){
     if(!ws[i]){var e=document.createElement('div');e.className='spr-empty';e.style.width=WW_+'px';row.appendChild(e);i++;}
-    else{var sp=ws[i],s0=i;while(i<TL_WEEKS&&ws[i]&&ws[i].id===sp.id)i++;var cnt=i-s0;var wrap=document.createElement('div');wrap.className='spr-block';wrap.style.width=(cnt*WW_)+'px';var inn=document.createElement('div');inn.className='spr-inner';inn.style.width=(cnt*WW_-2)+'px';var nm=document.createElement('span');nm.textContent=sp.name;var dl=document.createElement('button');dl.className='spr-del';dl.textContent='🗑';inn.appendChild(nm);inn.appendChild(dl);(function(s){inn.addEventListener('click',function(e){e.stopPropagation();openSprCtx(e,s.id);});dl.addEventListener('click',function(e){e.stopPropagation();snapshot();D.sprints=D.sprints.filter(function(x){return x.id!==s.id;});render();});})(sp);wrap.appendChild(inn);row.appendChild(wrap);}
+    else{
+      var sp=ws[i],s0=i;
+      while(i<TL_WEEKS&&ws[i]&&ws[i]._idx===sp._idx)i++;
+      var cnt=i-s0;
+      var wrap=document.createElement('div');wrap.className='spr-block';wrap.style.width=(cnt*WW_)+'px';
+      var inn=document.createElement('div');inn.className='spr-inner';inn.style.width=(cnt*WW_-2)+'px';
+      var nm=document.createElement('span');nm.textContent=sp.name;
+      inn.appendChild(nm);
+      wrap.appendChild(inn);
+      row.appendChild(wrap);
+    }
   }
 }
 
@@ -693,6 +770,27 @@ function getRollupColor(row){
 
 function renderBody(TW,WW_){
   var tb=document.getElementById('tlbody');tb.innerHTML='';tb.style.width=TW+'px';
+  // sprint divider lines — use absolute divs for pixel-perfect RTL alignment
+  try{
+    tb.style.backgroundImage='none';
+    var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
+    if(cfg&&cfg.startDate){
+      var wps=cfg.weeksPerSprint||3;
+      var sDate=new Date(cfg.startDate+'T12:00:00');
+      var msPerSprint=wps*7*86400000;
+      // find first boundary at or after TL_START
+      var msDiff=TL_START.getTime()-sDate.getTime();
+      var firstIdx=msDiff>0?Math.ceil(msDiff/msPerSprint):0;
+      for(var si=firstIdx;si<=TL_WEEKS/wps+firstIdx+1;si++){
+        var boundaryDate=new Date(sDate.getTime()+si*msPerSprint);
+        var rx=dateRight(fd(boundaryDate));
+        if(rx<0||rx>TW)continue;
+        var div=document.createElement('div');
+        div.style.cssText='position:absolute;top:0;bottom:0;right:'+rx+'px;width:1px;background:#A8A49C;pointer-events:none;z-index:1;';
+        tb.appendChild(div);
+      }
+    }
+  }catch(e){}
   var rows=getRows();
   var totH=rows.reduce(function(s,r){return s+rowH(r);},0);
 
@@ -738,14 +836,17 @@ function renderBody(TW,WW_){
         re.addEventListener('mouseenter',(function(wid){return function(){_lastPasteWid=wid;};})(w.id));
         re.addEventListener('dblclick',function(e){
           var el=e.target;while(el&&el!==re){if(el.classList&&el.classList.contains('blk'))return;el=el.parentElement;}
-          var rect=re.getBoundingClientRect();
-          var wi=Math.floor((rect.right-e.clientX)/WW_);
+          var tlwrap=document.getElementById('tlwrap');
+          var wrapRect=tlwrap.getBoundingClientRect();
+          // RTL: pixel from right edge of tlinner
+          var pixFromRight=(wrapRect.right - e.clientX) + tlwrap.scrollLeft;
+          var wi=Math.floor(pixFromRight/WW_);
           if(wi<0||wi>=TL_WEEKS)return;
           var startDate=fd(wkDate(wi));
-          var endDate=fd(addW(wkDate(wi),2));
+          var endDate=fd(addD(addW(wkDate(wi),1),6));
           var newId=D.nextTid++;
           snapshot();
-          D.tasks.push({id:newId,wid:w.id,name:'משימה חדשה',start:startDate,end:endDate,color:null});
+          D.tasks.push({id:newId,wid:w.id,name:'משימה חדשה',start:startDate,end:endDate,weeks:2,color:null});
           render();
           setTimeout(function(){
             var blk=document.querySelector('.blk[data-tid="'+newId+'"]');
@@ -775,13 +876,14 @@ function renderBody(TW,WW_){
         });
       })(row.obj);
       D.tasks.filter(function(t){return t.wid===row.obj.id;}).forEach(function(t){
-        var r=dateRight(t.start),r2=dateRight(t.end)+WW_,bw=r2-r-2;
+        var weeks=Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime()-6*86400000)/(7*86400000))+1);
+        var r=dateRight(t.start),bw=weeks*WW_-2;
         if(bw<2)return;
         var primaryW=D.workers.find(function(w){return w.id===t.wid;});
         var col=t.color||(primaryW?primaryW.color:row.obj.color);
         var blk=document.createElement('div');blk.className='blk'+(selectedTids.has(+t.id)?' sel':'');blk.dataset.tid=String(t.id);
         blk.style.cssText='right:'+r+'px;width:'+bw+'px;background:'+col+';'+(t.risk?'outline:2px solid #E24B4A;outline-offset:-2px;':'');
-        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+t.name+'</span><button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
+        blk.innerHTML='<div class="rhandle-r"></div><div class="dep-dot dep-dot-r" data-tid="'+String(t.id)+'" data-side="start"></div><span class="btitle">'+t.name+'</span>'+(t.note?'<span class="blk-note-dot" title="" data-note="'+t.note.replace(/"/g,'&quot;')+'">!</span>':'')+'<button class="blk-opts">⋯</button><button class="blk-del" title="מחק">✕</button><div class="dep-dot dep-dot-l" data-tid="'+String(t.id)+'" data-side="end"></div><div class="rhandle-l"></div>';
         blk.querySelector('.blk-opts').addEventListener('click',function(e){e.stopPropagation();openBlockCtx(e,t.id);});
         blk.querySelectorAll('.dep-dot').forEach(function(dot){
           dot.addEventListener('mousedown',(function(d){return function(e){e.preventDefault();e.stopPropagation();startDepDrag(e,d);};})(dot));
@@ -807,8 +909,8 @@ function renderBody(TW,WW_){
           updateSelBar();
           document.getElementById('tlwrap').focus();
         });
-        blk.addEventListener('mouseenter',function(e){showTooltip(e,t);});
-        blk.addEventListener('mousemove',function(e){showTooltip(e,t);});
+        blk.addEventListener('mouseenter',function(e){if(e.target.classList.contains('blk-note-dot'))return;showTooltip(e,t);});
+        blk.addEventListener('mousemove',function(e){if(e.target.classList.contains('blk-note-dot')){hideTooltip();return;}showTooltip(e,t);});
         blk.addEventListener('mouseleave',function(){hideTooltip();});
         blk.addEventListener('dblclick',function(e){
           if(e.target.classList.contains('rhandle-r')||e.target.classList.contains('rhandle-l')||e.target.classList.contains('blk-opts')||e.target.classList.contains('blk-del'))return;
@@ -844,16 +946,15 @@ function renderBody(TW,WW_){
 }
 
 // ── DRAG & RESIZE ──────────────────────────────────────────────────────────
-function resolvePush(wid, origSpans){
+function resolvePush(wid){
   var tasks=D.tasks.filter(function(x){return x.wid===wid;});
   tasks.sort(function(a,b){return pd(a.start).getTime()-pd(b.start).getTime();});
   for(var i=0;i<tasks.length-1;i++){
     var a=tasks[i],b=tasks[i+1];
-    if(pd(a.end).getTime()+7*86400000>pd(b.start).getTime()){
-      var span=(origSpans&&origSpans[b.id]!==undefined)?origSpans[b.id]:Math.round(diffW(pd(b.start),pd(b.end)));
-      if(span<1)span=1;
-      b.start=fd(addW(pd(a.end),1));
-      b.end=fd(addW(pd(b.start),span));
+    // a ends on Saturday, b starts on Sunday — overlap if b.start <= a.end
+    if(pd(b.start).getTime()<=pd(a.end).getTime()){
+      b.start=fd(addW(pd(a.start),a.weeks||1));
+      b.end=fd(addD(addW(pd(b.start),b.weeks-1),6));
     }
   }
   propagateDeps();
@@ -903,37 +1004,37 @@ function startDrag(e,tid,worker,blk){
   snapshot();
   var t=D.tasks.find(function(x){return x.id===tid;});
   blk.classList.add('drag');
-  var os=t.start,oe=t.end,sx=e.clientX,last=null;
-  var span=Math.round(diffW(pd(os),pd(oe)));if(span<1)span=1;
+  var os=t.start,sx=e.clientX,last=null;
   var currentRow=blk.parentElement;
-  var origSpans={};
-  D.tasks.filter(function(x){return x.wid===worker.id;}).forEach(function(x){
-    origSpans[x.id]=Math.round(diffW(pd(x.start),pd(x.end)));
-  });
+  // save original positions — use weeks directly
   var origPos={};
-  D.tasks.filter(function(x){return x.wid===worker.id&&x.id!==tid;}).forEach(function(x){
-    origPos[x.id]={start:x.start,end:x.end};
+  D.tasks.filter(function(x){return x.wid===worker.id;}).forEach(function(x){
+    origPos[x.id]={start:x.start,end:x.end,weeks:x.weeks||1};
   });
 
   function onMove(ev){
-    // horizontal
     var d=Math.round(-(ev.clientX-sx)/WW());
     if(d!==last){
       last=d;
-      t.start=fd(addW(pd(os),d));
-      t.end=fd(addW(pd(oe),d));
+      var newStart=addW(pd(os),d);
+      // snap to nearest Sunday
+      var day=newStart.getDay(); // 0=Sun
+      if(day!==0)newStart=addD(newStart,-day);
+      t.start=fd(newStart);
+      t.end=fd(addD(addW(newStart,t.weeks-1),6));
       blk.style.right=dateRight(t.start)+'px';
+      // restore all other tasks to original, then push
       D.tasks.filter(function(x){return x.wid===t.wid&&x.id!==tid;}).forEach(function(x){
-        if(origPos[x.id]){x.start=origPos[x.id].start;x.end=origPos[x.id].end;}
+        if(origPos[x.id]){x.start=origPos[x.id].start;x.end=origPos[x.id].end;x.weeks=origPos[x.id].weeks;}
       });
-      resolvePush(t.wid,origSpans);
-      // update all affected tasks visually (same row + dep targets)
+      resolvePush(t.wid);
+      // update visuals
       D.tasks.forEach(function(x){
         if(x.id===tid)return;
         var b=document.querySelector('.blk[data-tid="'+x.id+'"]');
         if(!b)return;
         b.style.right=dateRight(x.start)+'px';
-        b.style.width=(dateRight(x.end)+WW()-dateRight(x.start)-2)+'px';
+        b.style.width=((x.weeks||1)*WW()-2)+'px';
       });
     }
     // vertical - cross row
@@ -958,9 +1059,7 @@ function startDrag(e,tid,worker,blk){
     blk.classList.remove('drag');
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
-    // normalize end to week-aligned from start
-    var span=Math.max(1,Math.round(diffW(pd(t.start),pd(t.end))));
-    t.end=fd(addW(pd(t.start),span));
+    t.end=fd(addD(addW(pd(t.start),t.weeks-1),6));
     render();
   }
   document.addEventListener('mousemove',onMove);
@@ -971,10 +1070,14 @@ function startResizeR(e,tid,blk){
   snapshot();
   var t=D.tasks.find(function(x){return x.id===tid;});
   var os=t.start,sx=e.clientX;
+  var origSpan=t.weeks||1;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var maxD=Math.ceil(diffW(pd(os),pd(t.end)))-1;var dc=Math.min(d,maxD);var ns=fd(addW(pd(os),dc));
-    t.start=ns;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.right=r+'px';blk.style.width=(r2-r-2)+'px';
+    var newSpan=Math.max(1,origSpan-d);
+    t.start=fd(addW(pd(os),origSpan-newSpan));
+    t.weeks=newSpan;
+    t.end=fd(addD(addW(pd(t.start),newSpan-1),6));
+    blk.style.right=dateRight(t.start)+'px';blk.style.width=(newSpan*WW()-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
   function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);render();}
@@ -984,11 +1087,14 @@ function startResizeL(e,tid,blk){
   e.preventDefault();e.stopPropagation();
   snapshot();
   var t=D.tasks.find(function(x){return x.id===tid;});
-  var oe=t.end,sx=e.clientX;
+  var sx=e.clientX;
+  var origSpan=t.weeks||1;
   function onMove(e){
     var d=Math.round(-(e.clientX-sx)/WW());
-    var minD=-(Math.ceil(diffW(pd(t.start),pd(oe)))-1);var dc=Math.max(d,minD);var ne=fd(addW(pd(oe),dc));
-    t.end=ne;var r=dateRight(t.start),r2=dateRight(t.end)+WW();blk.style.width=(r2-r-2)+'px';
+    var newSpan=Math.max(1,origSpan+d);
+    t.weeks=newSpan;
+    t.end=fd(addD(addW(pd(t.start),newSpan-1),6));
+    blk.style.width=(newSpan*WW()-2)+'px';
     requestAnimationFrame(redrawDeps);
   }
   function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);render();}
@@ -1088,48 +1194,25 @@ var _msId=null;
 var MS_DEFAULT_COLOR='#1E3A5F';
 
 function renderMilestones(){
-  // remove old milestone elements
   document.querySelectorAll('.milestone-line,.milestone-flag').forEach(function(el){el.remove();});
   var tb=document.getElementById('tlbody');
-  var ti=document.getElementById('tlinner');
-  if(!tb||!ti)return;
+  var msrow=document.getElementById('msrow');
+  if(!tb||!msrow)return;
   var totalH=tb.offsetHeight||200;
-  // header: sprrow=34, mrow=28, wkrow=26
-  // label sits inside mrow: top = 34 + 4 = 38px from tlinner top
-  var HDR=88; // total header height
-  var LABEL_TOP=MODE_WEEKS?38:52; // date mode: between mrow and wkrow; week mode: inside mrow
-  var xCount={};
   D.milestones.forEach(function(ms){
-    var r=dateRight(ms.date)+Math.round(WW()/2); // center of week
+    var r=dateRight(ms.date)+Math.round(WW()/2);
     if(r<0||r>totalW())return;
     var col=ms.color||MS_DEFAULT_COLOR;
-    // vertical dashed line — in tlbody
+    // vertical dashed line in tlbody only
     var line=document.createElement('div');
     line.className='milestone-line';
-    // Line in tlbody (below header)
-    var lineTop=30;
-    line.style.cssText='right:'+r+'px;top:-'+lineTop+'px;height:'+(totalH+lineTop)+'px;border-color:'+col+';';
+    line.style.cssText='right:'+r+'px;top:0;height:'+totalH+'px;border-color:'+col+';';
     tb.appendChild(line);
-    // Separate line segment in tlinner to show through header rows
-    // from flag bottom (LABEL_TOP+flagH=58) down to end of header (88px)
-    var hline=document.createElement('div');
-    hline.className='milestone-line';
-    var flagBot=LABEL_TOP+20;var hlineH=88-flagBot;if(hlineH>0){hline.style.cssText='right:'+r+'px;top:'+flagBot+'px;height:'+hlineH+'px;border-color:'+col+';z-index:16;position:absolute;';}else{hline.style.display='none';}
-    ti.appendChild(hline);
-    // label in tlinner (absolute, between mrow and wkrow)
-    var xk=Math.round(r);
-    xCount[xk]=(xCount[xk]||0);
+    // flag in msrow
     var flag=document.createElement('div');
     flag.className='milestone-flag';
-    // stack labels if same week: offset downward won't work well in fixed row,
-    // so offset rightward instead (shift left in RTL = subtract from right)
-    var offset=xCount[xk]*0; // for now no offset
-    xCount[xk]++;
-    // anchor right edge of flag to the milestone line
-    flag.style.cssText='right:'+r+'px;top:'+LABEL_TOP+'px;background:'+col+';position:absolute;z-index:16;';
+    flag.style.cssText='right:'+r+'px;top:2px;background:'+col+';position:absolute;z-index:16;';
     flag.textContent=ms.name;
-    flag.title=ms.name+' | '+ms.date;
-    // tooltip
     var tt=document.getElementById('msTooltip');
     flag.addEventListener('mouseenter',function(e){
       tt.textContent=ms.name+' - '+(MODE_WEEKS?('W'+Math.round(diffW(TL_START,pd(ms.date))+1)):ms.date);
@@ -1145,7 +1228,7 @@ function renderMilestones(){
         if(confirm('למחוק "'+m.name+'"?')){snapshot();D.milestones=D.milestones.filter(function(x){return x.id!==m.id;});renderMilestones();saveData();}
       });
     })(ms);
-    ti.appendChild(flag);
+    msrow.appendChild(flag);
   });
 }
 
@@ -1356,6 +1439,7 @@ function openBlockCtx(e,tid){
    {sep:1},
    {l:'📝 '+(t.note?'ערוך הערה':'הוסף הערה'),f:function(){closeCtx();openNoteModal(tid);}},
    {l:t.risk?'✅ הסר סיכון':'⚠️ סיכון / נדרשת העמקה',f:function(){snapshot();t.risk=!t.risk;closeCtx();render();}},
+   {l:t.offProject?'✅ החזר לחשבון הפרויקט':'🔀 לא על חשבון הפרויקט',f:function(){snapshot();t.offProject=!t.offProject;closeCtx();render();}},
    {sep:1},
    {l:'🗑 מחק',f:function(){snapshot();D.tasks=D.tasks.filter(function(x){return x.id!==tid;});closeCtx();render();},cls:'del'}
   ].forEach(function(it){
@@ -1371,7 +1455,19 @@ document.getElementById('sprCtxDel').addEventListener('click',function(){snapsho
 // ── COLOR PICKER ────────────────────────────────────────────────────────────
 function openCP(e,target){
   _cpTarget=target;var pop=document.getElementById('cpop');pop.innerHTML='';
-  COLS.forEach(function(col){
+  // determine palette
+  var palette=COLS;
+  if(target.type==='worker'){
+    var w=D.workers.find(function(x){return x.id===target.wid;});
+    if(w){
+      var grp=null;
+      if(w.gid)grp=D.groups.find(function(g){return +g.id===+w.gid;});
+      else if(w.tid){var tm=D.teams.find(function(t){return +t.id===+w.tid;});if(tm)grp=D.groups.find(function(g){return +g.id===+tm.gid;});}
+      var baseCol=grp&&grp.color?grp.color:w.color;
+      if(baseCol)palette=groupShades(baseCol);
+    }
+  }
+  palette.forEach(function(col){
     var sw=document.createElement('div');sw.className='copt';sw.style.background=col;
     sw.addEventListener('click',function(ev){
       ev.stopPropagation();
@@ -1454,11 +1550,12 @@ function openWorkerModal(wid,tid){
   if(realTid)document.getElementById('wm-team').value=realTid;
   function refreshColors(){
     var gid=parseInt(gSel.value)||null;
-    var grp=gid?D.groups.find(function(g){return g.id===gid;}):null;
-    var grpCol=grp&&grp.color?grp.color:null;
+    var grp=gid?D.groups.find(function(g){return +g.id===gid;}):null;
+    var grpCol=grp&&grp.color?grp.color:(w&&w.color?w.color:null);
     buildColors('wm-colors',w?w.color:null,true,grpCol);
   }
-  refreshColors();
+  // call after DOM is settled
+  setTimeout(refreshColors,0);
   gSel.onchange=function(){
     var gid=parseInt(gSel.value)||null;
     refreshTeams(gid);
@@ -1482,17 +1579,54 @@ function saveWorker(){
   cm('wmodal');render();
 }
 
-function openTaskModal(tid,wid,startDate){_eTid=tid||null;var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';document.getElementById('tsm-name').value=t?t.name:'';var sel=document.getElementById('tsm-worker');sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));var td=fd(TODAY);document.getElementById('tsm-start').value=t?t.start:(startDate||td);document.getElementById('tsm-end').value=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));buildColors('tsm-colors',t?t.color:null,true);
-  om('tskmodal');setTimeout(function(){document.getElementById('tsm-name').focus();},50);}
-function saveTask(){var name=document.getElementById('tsm-name').value.trim();var wid=parseInt(document.getElementById('tsm-worker').value);var start=document.getElementById('tsm-start').value;var end=document.getElementById('tsm-end').value;if(!name||!start||!end||end<start)return;var ce=document.querySelector('#tsm-colors .copt.on');var color=(ce&&ce.dataset.none)?null:(ce?(ce.dataset.hex||ce.style.background):null);  snapshot();
-  if(_eTid){var t=D.tasks.find(function(x){return x.id===_eTid;});Object.assign(t,{name:name,wid:wid,start:start,end:end,color:color||null});}
-  else D.tasks.push({id:D.nextTid++,wid:wid,name:name,start:start,end:end,color:color||null});
-  cm('tskmodal');render();}
+function openTaskModal(tid,wid,startDate){
+  _eTid=tid||null;
+  var t=tid?D.tasks.find(function(x){return x.id===tid;}):null;
+  document.getElementById('tsm-title').textContent=t?'ערוך משימה':'הוסף משימה';
+  document.getElementById('tsm-name').value=t?t.name:'';
+  var sel=document.getElementById('tsm-worker');
+  sel.innerHTML=D.workers.map(function(w){return '<option value="'+w.id+'">'+w.name+'</option>';}).join('');
+  sel.value=t?t.wid:(wid||(D.workers[0]&&D.workers[0].id));
+  var td=fd(TODAY);
+  var sVal=t?t.start:(startDate||td);
+  var eVal=t?t.end:(startDate?fd(addW(pd(startDate),2)):fd(addW(TODAY,2)));
+  document.getElementById('tsm-start').value=sVal;
+  document.getElementById('tsm-end').value=eVal;
+  // sync weeks field
+  var wks=t&&t.weeks?t.weeks:Math.max(1,Math.round((pd(eVal).getTime()-pd(sVal).getTime()-6*86400000)/(7*86400000))+1);
+  document.getElementById('tsm-weeks').value=wks;
+  buildColors('tsm-colors',t?t.color:null,true);
+  om('tskmodal');setTimeout(function(){document.getElementById('tsm-name').focus();},50);
+}
+function saveTask(){
+  var name=document.getElementById('tsm-name').value.trim();
+  var wid=parseInt(document.getElementById('tsm-worker').value);
+  var start=document.getElementById('tsm-start').value;
+  var weeks=Math.max(1,parseInt(document.getElementById('tsm-weeks').value)||1);
+  var end=fd(addD(addW(pd(start),weeks-1),6));
+  if(!name||!start)return;
+  var ce=document.querySelector('#tsm-colors .copt.on');
+  var color=(ce&&ce.dataset.none)?null:(ce?(ce.dataset.hex||ce.style.background):null);
+  snapshot();
+  if(_eTid){var t=D.tasks.find(function(x){return x.id===_eTid;});Object.assign(t,{name:name,wid:wid,start:start,end:end,weeks:weeks,color:color||null});}
+  else D.tasks.push({id:D.nextTid++,wid:wid,name:name,start:start,end:end,weeks:weeks,color:color||null});
+  cm('tskmodal');render();
+}
 
 function openSprintModal(sid){_eSid=sid||null;var s=sid?D.sprints.find(function(x){return x.id===sid;}):null;document.getElementById('spr-title').textContent=s?'ערוך ספרינט':'הוסף ספרינט';document.getElementById('spr-name').value=s?s.name:'Sprint '+(D.sprints.length+1);document.getElementById('spr-start').value=s?s.start:fd(TL_START);document.getElementById('spr-weeks').value=s?Math.max(1,Math.round(diffW(pd(s.start),pd(s.end)))):2;om('sprmodal');setTimeout(function(){document.getElementById('spr-name').focus();},50);}
 function saveSprint(){var name=document.getElementById('spr-name').value.trim();var start=document.getElementById('spr-start').value;var weeks=parseInt(document.getElementById('spr-weeks').value)||2;if(!name||!start)return;var end=fd(addD(addW(pd(start),weeks),-1));snapshot();if(_eSid){var s=D.sprints.find(function(x){return x.id===_eSid;});s.name=name;s.start=start;s.end=end;}else D.sprints.push({id:D.nextSid++,name:name,start:start,end:end});cm('sprmodal');render();toast('ספרינט נשמר ✓');}
 
 function quickRange(w){document.getElementById('range-s').value=fd(TL_START);document.getElementById('range-w').value=w;}
+function applyQuickRange(w){
+  TL_WEEKS=w;
+  var availW=document.getElementById('tlwrap').clientWidth||800;
+  ZL=Math.max(25,Math.min(300,Math.floor(availW/TL_WEEKS/80*100)));
+  document.getElementById('zlbl').textContent=ZL+'%';
+  render();
+  var tlwrap=document.getElementById('tlwrap');
+  tlwrap.style.direction='ltr';tlwrap.scrollLeft=0;tlwrap.style.direction='rtl';tlwrap.scrollLeft=0;
+  toast(w===12?'3 חודשים':w===24?'6 חודשים':w===52?'שנה':'שנתיים');
+}
 
 // Apply range — inline handler to guarantee it reads fresh values
 document.getElementById('applyRangeBtn').addEventListener('click',function(){
@@ -1503,28 +1637,7 @@ document.getElementById('applyRangeBtn').addEventListener('click',function(){
   if(w>200)w=200;
   if(sVal&&sVal.length===10)TL_START=sundayBefore(pd(sVal));
   TL_WEEKS=w;
-  // regenerate sprints for new range
-  (function(){
-    try{
-      var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
-      if(cfg&&cfg.startDate){
-        var wps=cfg.weeksPerSprint||3;
-        var firstN=cfg.firstSprint||1;
-        var sDate=new Date(cfg.startDate+'T12:00:00');
-        var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
-        var s=new Date(sDate);var n=firstN;
-        while(new Date(s.getTime()+wps*7*86400000)<TL_START){s=new Date(s.getTime()+wps*7*86400000);n++;}
-        if(n>firstN){s=new Date(s.getTime()-wps*7*86400000);n--;}
-        var sprints=[];var sid=1;
-        while(s<tlEnd){
-          var end=new Date(s.getTime()+wps*7*86400000-86400000);
-          sprints.push({id:sid++,name:'Sprint '+n,start:fd(s),end:fd(end)});
-          s=new Date(s.getTime()+wps*7*86400000);n++;
-        }
-        D.sprints=sprints;D.nextSid=sprints.length+1;
-      }
-    }catch(e){}
-  })();
+  // sprints are now computed on-the-fly in renderSprints — nothing to regenerate
   // Auto-fit zoom so the full range fills the available width
   var tlwrap=document.getElementById('tlwrap');
   var availW=tlwrap.clientWidth||800;
@@ -1580,22 +1693,20 @@ function buildSummary(){
   if(!body)return;
   var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
   var HPW=cfg.hoursPerWeek||42;
-  function taskWeeks(t){return Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime())/(7*86400000))+1);}
+  function taskWeeks(t){return Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime()-6*86400000)/(7*86400000))+1);}
   var rows=[];var totalWeeks=0,totalHours=0;
   D.groups.forEach(function(g){
     var gWeeks=0;
     var teamRows=[];
-    // workers via teams
     D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
       var wids=D.workers.filter(function(w){return +w.tid===+team.id;}).map(function(w){return w.id;});
       var tWeeks=0;
-      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid;}).forEach(function(t){tWeeks+=taskWeeks(t);});});
+      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid&&!t.offProject;}).forEach(function(t){tWeeks+=taskWeeks(t);});});
       if(tWeeks>0){teamRows.push({name:team.name,weeks:tWeeks,hours:tWeeks*HPW});gWeeks+=tWeeks;}
     });
-    // workers directly in group (no team)
     var directWids=D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).map(function(w){return w.id;});
     var directWeeks=0;
-    directWids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid;}).forEach(function(t){directWeeks+=taskWeeks(t);});});
+    directWids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid&&!t.offProject;}).forEach(function(t){directWeeks+=taskWeeks(t);});});
     if(directWeeks>0){teamRows.push({name:'ישיר לקבוצה',weeks:directWeeks,hours:directWeeks*HPW});gWeeks+=directWeeks;}
     if(gWeeks>0){rows.push({name:g.name,weeks:gWeeks,hours:gWeeks*HPW,teams:teamRows});totalWeeks+=gWeeks;totalHours+=gWeeks*HPW;}
   });
@@ -1612,6 +1723,24 @@ function buildSummary(){
   });
   html+='<div style="display:flex;justify-content:space-between;padding:10px;background:#1E3A5F;border-radius:var(--r);color:#fff;font-weight:700;font-size:13px;margin-top:8px;">';
   html+='<span>סה"כ</span><span>'+totalWeeks+' שבועות  '+totalHours+' שעות</span></div>';
+  // off-project tasks
+  var offTasks=D.tasks.filter(function(t){return t.offProject;});
+  if(offTasks.length){
+    var offWeeks=0;
+    offTasks.forEach(function(t){offWeeks+=taskWeeks(t);});
+    var offHours=offWeeks*HPW;
+    html+='<div style="margin-top:14px;border-top:2px dashed var(--brd);padding-top:10px;">';
+    html+='<div style="font-size:11px;font-weight:700;color:var(--mut);margin-bottom:6px;">לא על חשבון הפרויקט</div>';
+    offTasks.forEach(function(t){
+      var w=D.workers.find(function(x){return x.id===t.wid;});
+      var tw=taskWeeks(t);
+      html+='<div style="display:flex;justify-content:space-between;padding:5px 10px;font-size:12px;border-bottom:1px solid var(--brd);">';
+      html+='<span style="color:var(--mut);">'+(w?w.name:'')+' — '+t.name+'</span><span>'+tw+' שבועות  '+(tw*HPW)+' שעות</span></div>';
+    });
+    html+='<div style="display:flex;justify-content:space-between;padding:7px 10px;background:var(--bg);border-radius:var(--r);font-weight:700;font-size:12px;margin-top:4px;">';
+    html+='<span>סה"כ לא על חשבון</span><span style="color:var(--mut);">'+offWeeks+' שבועות  '+offHours+' שעות</span></div>';
+    html+='</div>';
+  }
   body.innerHTML=html;
 }
 
@@ -1619,7 +1748,7 @@ window.exportSummaryXlsx=function exportSummaryXlsx(){
   if(typeof XLSX==='undefined'){toast('טוען...');return;}
   var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
   var HPW=cfg.hoursPerWeek||42;
-  function taskWeeks(t){return Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime())/(7*86400000))+1);}
+  function taskWeeks(t){return Math.max(1,Math.round((pd(t.end).getTime()-pd(t.start).getTime()-6*86400000)/(7*86400000))+1);}
   var wsData=[['קבוצה','צוות','שבועות','שעות']];
   var totalW=0,totalH=0;
   D.groups.forEach(function(g){
@@ -1627,18 +1756,32 @@ window.exportSummaryXlsx=function exportSummaryXlsx(){
     D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
       var wids=D.workers.filter(function(w){return +w.tid===+team.id;}).map(function(w){return w.id;});
       var tW=0;
-      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid;}).forEach(function(t){tW+=taskWeeks(t);});});
+      wids.forEach(function(wid){D.tasks.filter(function(t){return +t.wid===+wid&&!t.offProject;}).forEach(function(t){tW+=taskWeeks(t);});});
       if(tW>0){wsData.push([g.name,team.name,tW,tW*HPW]);gW+=tW;}
     });
     var dW=0;
     D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).forEach(function(w){
-      D.tasks.filter(function(t){return +t.wid===+w.id;}).forEach(function(t){dW+=taskWeeks(t);});
+      D.tasks.filter(function(t){return +t.wid===+w.id&&!t.offProject;}).forEach(function(t){dW+=taskWeeks(t);});
     });
     if(dW>0){wsData.push([g.name,'ישיר לקבוצה',dW,dW*HPW]);gW+=dW;}
     if(gW>0){wsData.push([g.name,'סה"כ',gW,gW*HPW]);totalW+=gW;totalH+=gW*HPW;}
   });
   wsData.push(['','','','']);
   wsData.push(['סה"כ','',totalW,totalH]);
+  // off-project section
+  var offTasks=D.tasks.filter(function(t){return t.offProject;});
+  if(offTasks.length){
+    wsData.push(['','','','']);
+    wsData.push(['לא על חשבון הפרויקט','','','']);
+    var offTotalW=0;
+    offTasks.forEach(function(t){
+      var w=D.workers.find(function(x){return x.id===t.wid;});
+      var tw=taskWeeks(t);
+      wsData.push([(w?w.name:'')+' — '+t.name,'',tw,tw*HPW]);
+      offTotalW+=tw;
+    });
+    wsData.push(['סה"כ לא על חשבון','',offTotalW,offTotalW*HPW]);
+  }
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(wsData);
   ws['!cols']=[{wch:20},{wch:20},{wch:12},{wch:12}];
@@ -1648,6 +1791,95 @@ window.exportSummaryXlsx=function exportSummaryXlsx(){
 };
 
 window.buildSummary=buildSummary;
+
+document.getElementById('tasksTableBtn').onclick=function(){
+  buildTasksTable();
+  document.getElementById('tasksTableModal').classList.add('open');
+};
+
+function buildTasksTable(){
+  var body=document.getElementById('tasksTableBody');
+  if(!body)return;
+  var rows=[];
+  D.groups.forEach(function(g){
+    var workers=[];
+    // workers via teams
+    D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
+      D.workers.filter(function(w){return +w.tid===+team.id;}).forEach(function(w){workers.push(w);});
+    });
+    // direct workers
+    D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).forEach(function(w){workers.push(w);});
+    workers.forEach(function(w){
+      var tasks=D.tasks.filter(function(t){return +t.wid===+w.id;});
+      if(!tasks.length)return;
+      tasks.forEach(function(t,ti){
+        rows.push({gname:g.name,gspan:0,wname:w.name,wcolor:w.color,wspan:0,tname:t.name,weeks:t.weeks||1,first:ti===0,gFirst:false,offProject:t.offProject});
+      });
+    });
+  });
+  // calc spans
+  var i=0;
+  while(i<rows.length){
+    // group span
+    var gname=rows[i].gname,gs=i;
+    while(i<rows.length&&rows[i].gname===gname)i++;
+    rows[gs].gspan=i-gs;rows[gs].gFirst=true;
+  }
+  i=0;
+  while(i<rows.length){
+    var wname=rows[i].wname,gn=rows[i].gname,ws2=i;
+    while(i<rows.length&&rows[i].wname===wname&&rows[i].gname===gn)i++;
+    rows[ws2].wspan=i-ws2;
+  }
+
+  var html='<table style="width:100%;border-collapse:collapse;font-size:12px;font-family:Heebo,sans-serif;direction:rtl;">';
+  html+='<thead><tr style="background:#1E3A5F;color:#fff;">';
+  html+='<th style="padding:8px 10px;text-align:right;font-weight:700;">קבוצה</th>';
+  html+='<th style="padding:8px 10px;text-align:right;font-weight:700;">עובד</th>';
+  html+='<th style="padding:8px 10px;text-align:right;font-weight:700;">משימה</th>';
+  html+='<th style="padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap;">שבועות</th>';
+  html+='</tr></thead><tbody>';
+
+  rows.forEach(function(r){
+    html+='<tr style="border-bottom:1px solid #E0DED8;'+(r.offProject?'opacity:.6;':'')+'">';
+    if(r.gFirst){
+      html+='<td rowspan="'+r.gspan+'" style="padding:8px 10px;vertical-align:middle;font-weight:700;background:#F0EEE8;border-left:3px solid #1E3A5F;text-align:right;">'+r.gname+'</td>';
+    }
+    if(r.first){
+      html+='<td rowspan="'+r.wspan+'" style="padding:8px 10px;vertical-align:middle;text-align:right;background:#FAFAF8;">';
+      html+='<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:'+r.wcolor+';flex-shrink:0;display:inline-block;"></span><span>'+r.wname+'</span></span></td>';
+    }
+    html+='<td style="padding:6px 10px;text-align:right;">'+(r.offProject?'<span style="color:#888;font-size:10px;">🔀</span> ':'')+r.tname+'</td>';
+    html+='<td style="padding:6px 10px;text-align:center;font-weight:600;color:#378ADD;">'+r.weeks+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  body.innerHTML=html;
+}
+
+window.exportTasksTableXlsx=function(){
+  if(typeof XLSX==='undefined'){toast('טוען...');return;}
+  var wsData=[['קבוצה','עובד','משימה','שבועות','לא על חשבון']];
+  D.groups.forEach(function(g){
+    var workers=[];
+    D.teams.filter(function(t){return +t.gid===+g.id;}).forEach(function(team){
+      D.workers.filter(function(w){return +w.tid===+team.id;}).forEach(function(w){workers.push(w);});
+    });
+    D.workers.filter(function(w){return +w.gid===+g.id&&(!w.tid||!D.teams.find(function(t){return +t.id===+w.tid;}));}).forEach(function(w){workers.push(w);});
+    workers.forEach(function(w){
+      var tasks=D.tasks.filter(function(t){return +t.wid===+w.id;});
+      tasks.forEach(function(t){
+        wsData.push([g.name,w.name,t.name,t.weeks||1,t.offProject?'כן':'']);
+      });
+    });
+  });
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols']=[{wch:16},{wch:16},{wch:30},{wch:10},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'משימות');
+  XLSX.writeFile(wb,'tasks.xlsx');
+  toast('Excel יוצא');
+};
 
 document.getElementById('exportBtn').onclick=function(){
   var rows=[['משימה','עובד','התחלה','סיום','תלות']];
@@ -1683,32 +1915,7 @@ var _pt=sessionStorage.getItem('te_active_pname');
 if(_pt){var _tel=document.getElementById('plannerTitle');if(_tel)_tel.textContent='📋 '+_pt;}
 
 document.getElementById('modeBtn').textContent=MODE_WEEKS?'📅 תאריכים':'🔢 שבועות';
-// auto-generate sprints
-(function(){
-  try{
-    var cfg=JSON.parse(localStorage.getItem('te_sprint_config')||'{}');
-    if(cfg&&cfg.startDate){
-      var wps=cfg.weeksPerSprint||3;
-      var firstN=cfg.firstSprint||1;
-      var sDate=new Date(cfg.startDate+'T12:00:00');
-      var tlEnd=new Date(TL_START.getTime()+(TL_WEEKS+52)*7*86400000);
-      var s=new Date(sDate);
-      var n=firstN;
-      while(new Date(s.getTime()+wps*7*86400000)<TL_START){s=new Date(s.getTime()+wps*7*86400000);n++;}
-      if(n>firstN){s=new Date(s.getTime()-wps*7*86400000);n--;}
-      // align TL_START to sprint start
-      TL_START=new Date(s);
-      var sprints=[];var sid=1;
-      while(s<tlEnd){
-        var end=new Date(s.getTime()+wps*7*86400000-86400000);
-        sprints.push({id:sid++,name:'Sprint '+n,start:fd(s),end:fd(end)});
-        s=new Date(s.getTime()+wps*7*86400000);n++;
-      }
-      D.sprints=sprints;
-      D.nextSid=sprints.length+1;
-    }
-  }catch(e){}
-})();
+// sprints computed on-the-fly by getSprintForWeek() — no init needed
 
 render();
 setTimeout(function(){document.getElementById('tlwrap').scrollLeft=0;},100);
@@ -1759,13 +1966,13 @@ window.saveNote=saveNote;
 function updateTaskEnd(){
   var s=document.getElementById('tsm-start').value;
   var w=parseInt(document.getElementById('tsm-weeks').value)||1;
-  if(s){document.getElementById('tsm-end').value=fd(addW(pd(s),w));}
+  if(s){document.getElementById('tsm-end').value=fd(addD(addW(pd(s),w-1),6));}
 }
 function updateTaskWeeks(){
   var s=document.getElementById('tsm-start').value;
   var e=document.getElementById('tsm-end').value;
   if(s&&e){
-    var w=Math.max(1,Math.round(diffW(pd(s),pd(e))));
+    var w=Math.max(1,Math.round((pd(e).getTime()-pd(s).getTime()-6*86400000)/(7*86400000))+1);
     document.getElementById('tsm-weeks').value=w;
   }
 }
@@ -1793,6 +2000,27 @@ window.goBackHome=goBackHome;
 window.openBlockCtx=openBlockCtx;
 initDepCanvas();
 initDepHover();
+
+// note tooltip
+(function(){
+  var nt=document.getElementById('noteTooltip');
+  document.getElementById('tlbody').addEventListener('mouseover',function(e){
+    var dot=e.target.closest?e.target.closest('.blk-note-dot'):null;
+    if(!dot||!dot.dataset.note)return;
+    nt.textContent=dot.dataset.note;
+    nt.style.display='block';
+  });
+  document.getElementById('tlbody').addEventListener('mousemove',function(e){
+    if(nt.style.display==='none')return;
+    var x=e.clientX+14,y=e.clientY-10;
+    if(x+240>window.innerWidth)x=e.clientX-240;
+    nt.style.left=x+'px';nt.style.top=y+'px';
+  });
+  document.getElementById('tlbody').addEventListener('mouseout',function(e){
+    var dot=e.target.closest?e.target.closest('.blk-note-dot'):null;
+    if(dot)nt.style.display='none';
+  });
+})();
 
 // ── COPY / PASTE ──────────────────────────────────────────────────────────
 window.addEventListener('keydown',function(e){
