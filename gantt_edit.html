@@ -1306,11 +1306,9 @@ function render(){
             var planWorker=planWorkers.find(function(pw){return pw.globalId&&pw.globalId===w.globalId;});
             if(!planWorker)return;
             planTasks.filter(function(t){return +t.wid===+planWorker.id;}).forEach(function(task){
-              // חישוב זהה לאופן שגנט מחשב assignments — עיגול לשבוע שלם
-              var _wiStart=Math.round(diffW(TL_START,pd(task.start)));
-              var _wiEnd=Math.round(diffW(TL_START,pd(task.end)));
-              var _txS=(TL_WEEKS-1-_wiStart)*WW_; // right edge (start)
-              var _tx=(TL_WEEKS-1-_wiEnd)*WW_;    // left edge (end)
+              // בדיוק כמו dateX של הגנט: (TL_WEEKS-1-diffW(TL_START,pd(s)))*WW()
+              var _tx=dateX(task.end);
+              var _txS=dateX(task.start);
               var _tw=Math.max(_txS-_tx+WW_,WW_*0.4);
               if(_tx+_tw<0||_tx>TW)return;
               var _col=matchedGanttProj?matchedGanttProj.color:(planWorker.color||'#378ADD');
