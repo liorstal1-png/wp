@@ -3952,16 +3952,29 @@ function renderTPOverlays(){
         if(!isMismatch) return;
         var aBlk=document.querySelector('.blk[data-aid="'+a.id+'"]');
         if(!aBlk||aBlk.querySelector('.tp-warn')) return;
-        var warn=document.createElement('div');
-        warn.className='tp-warn';
-        warn.style.cssText='position:absolute;top:2px;right:4px;font-size:14px;line-height:1;z-index:20;pointer-events:none;';
-        warn.textContent='⚠️';
+        // הוסף tooltip על הבלוק בלבד — ללא שינוי DOM שלו
         var planProjName=proj.name||'תוכנית עבודה';
         var ganttProjName=ganttProj?ganttProj.name:'לא מוגדר';
-        var tipText='⚠️ אי-התאמה\nמשימה: '+task.name+'\nתוכנית: '+planProjName+'\nשיבוץ: '+ganttProjName+'\nתאריכים: '+task.start+' → '+task.end;
-        aBlk.title=tipText; // tooltip על הבלוק עצמו
-        aBlk.style.position='relative';
-        aBlk.appendChild(warn);
+        aBlk.title='⚠️ אי-התאמה\nמשימה: '+task.name+'\nתוכנית: '+planProjName+'\nשיבוץ: '+ganttProjName+'\nתאריכים: '+task.start+' → '+task.end;
+        // ⚠️ ממוקם על ידי getBoundingClientRect — fixed מעל הבלוק
+        var warn=document.createElement('div');
+        warn.className='tp-warn';
+        warn.style.cssText='position:fixed;font-size:13px;line-height:1;z-index:200;pointer-events:none;';
+        warn.textContent='⚠️';
+        document.body.appendChild(warn);
+        // מיקום דינמי בהתאם למיקום הבלוק
+        (function(blk,w){
+          function posWarn(){
+            var r=blk.getBoundingClientRect();
+            if(r.width===0){w.remove();return;}
+            w.style.left=(r.right-20)+'px';
+            w.style.top=(r.top+2)+'px';
+          }
+          posWarn();
+          // עדכן מיקום בגלילה
+          var wrap=document.getElementById('wrap');
+          if(wrap) wrap.addEventListener('scroll',posWarn,{passive:true});
+        })(aBlk,warn);
       });
     });
   });
