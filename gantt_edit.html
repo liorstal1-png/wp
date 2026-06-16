@@ -1186,6 +1186,7 @@ function render(){
           blk.style.background='#2C2C2C';
           blk.style.backgroundImage='none';
           blk.style.border='none';
+          blk.dataset.absence='1';
           t.style.color='rgba(255,255,255,.85)';
         } else {
           var isAlBlk=proj.status==='שיבוץ על'||a.isAl===true;
@@ -3921,29 +3922,40 @@ function buildTPPanel(){
 
 // Call this from render() to draw overlays after rows are built
 function renderTPOverlays(){
-  // נקה ⚠️ ישנים מ-btitle
-  document.querySelectorAll('.btitle[data-tp-warn]').forEach(function(el){
-    el.textContent=el.textContent.replace(/^⚠️ /,'');
-    delete el.dataset.tpWarn;
+  // נקה ⚠️ ישנים
+  document.querySelectorAll('.blk[data-tp-warn]').forEach(function(blk){
+    var t=blk.querySelector('.btitle');
+    if(t) t.textContent=t.textContent.replace(/^\u26a0\ufe0f /,'');
+    delete blk.dataset.tpWarn;
   });
   if(!_tpMismatches||!_tpMismatches.length) return;
+  var seen={};
   _tpMismatches.forEach(function(mm){
+    if(seen[mm.aid]) return;
+    seen[mm.aid]=1;
     var aBlk=document.querySelector('.blk[data-aid="'+mm.aid+'"]');
-    if(!aBlk) return;
+    if(!aBlk||aBlk.dataset.tpWarn) return;
+    if(aBlk.dataset.absence) return; // אל תסמן העדרויות
     var title=aBlk.querySelector('.btitle');
-    if(!title||title.dataset.tpWarn) return;
-    title.dataset.tpWarn='1';
-    // הוסף ⚠️ לפני שם הפרויקט
-    title.textContent='⚠️ '+title.textContent;
-    // tooltip מותאם בhover על הבלוק
+    if(!title) return;
+    aBlk.dataset.tpWarn='1';
+    title.textContent='\u26a0\ufe0f '+title.textContent;
     var tipHtml=
-      '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">⚠️ אי-התאמה</div>'+
-      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">משימה: <span style="color:#fff;">'+mm.taskName+'</span></div>'+
-      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">תוכנית: <span style="color:#fff;">'+mm.projName+'</span></div>'+
-      '<div style="font-size:10px;color:#aac4e0;">'+mm.start+' → '+mm.end+'</div>';
-    aBlk.addEventListener('mouseenter',function(e){showBlkTooltip(e,tipHtml);},{once:false,capture:false});
+      '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">\u26a0\ufe0f \u05d0\u05d9-\u05d4\u05ea\u05d0\u05de\u05d4</div>'+
+      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">\u05de\u05e9\u05d9\u05de\u05d4: <span style="color:#fff;">'+mm.taskName+'</span></div>'+
+      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">\u05ea\u05d5\u05db\u05e0\u05d9\u05ea: <span style="color:#fff;">'+mm.projName+'</span></div>'+
+      '<div style="font-size:10px;color:#aac4e0;">'+mm.start+' \u2192 '+mm.end+'</div>';
+    // החלף tooltip קיים
+    aBlk._tpTipHtml=tipHtml;
+  });
+  // עדכן mouseenter לכל הבלוקים עם ⚠️
+  document.querySelectorAll('.blk[data-tp-warn]').forEach(function(blk){
+    blk.addEventListener('mouseenter',function(e){
+      if(blk._tpTipHtml) showBlkTooltip(e,blk._tpTipHtml);
+    });
   });
 }
+
 
 
 window.toggleTPPanel = toggleTPPanel;
