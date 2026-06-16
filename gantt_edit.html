@@ -3964,25 +3964,34 @@ function renderTPOverlays(){
         warn.className='tp-warn';
         warn.style.cssText='position:fixed;font-size:13px;line-height:1;z-index:200;pointer-events:none;';
         warn.textContent='⚠️';
+        warn.dataset.aid=a.id; // לזיהוי בגלילה
         document.body.appendChild(warn);
         (function(blk,w,html){
           function posWarn(){
             var r=blk.getBoundingClientRect();
-            if(r.width===0){w.remove();return;}
+            if(r.width===0||r.right<0||r.left>window.innerWidth){w.style.display='none';return;}
+            w.style.display='block';
             w.style.left=(r.right-20)+'px';
             w.style.top=(r.top+2)+'px';
           }
           posWarn();
-          // tooltip בסגנון blk-tooltip בhover על הבלוק
+          w._posWarn=posWarn; // שמור לשימוש חוזר
           blk.addEventListener('mouseenter',function(e){showBlkTooltip(e,html);});
           blk.addEventListener('mousemove',posTooltip);
           blk.addEventListener('mouseleave',hideBlkTooltip);
-          var wrap=document.getElementById('wrap');
-          if(wrap) wrap.addEventListener('scroll',posWarn,{passive:true});
         })(aBlk,warn,tipHtml);
       });
     });
   });
+  // מאזין גלילה מרכזי לעדכון מיקום כל ⚠️
+  var tlwrap=document.getElementById('tlwrap');
+  if(tlwrap){
+    tlwrap.addEventListener('scroll',function(){
+      document.querySelectorAll('.tp-warn').forEach(function(w){
+        if(w._posWarn) w._posWarn();
+      });
+    },{passive:true});
+  }
 }
 
 window.toggleTPPanel = toggleTPPanel;
