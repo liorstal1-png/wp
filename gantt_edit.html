@@ -1131,13 +1131,16 @@ function render(){
         var rh=document.createElement('div'); rh.className='rhandle'; rh.style.right='0'; rh.style.left='auto'; blk.appendChild(rh);
         var lh=document.createElement('div'); lh.className='lhandle'; blk.appendChild(lh);
         blk.addEventListener('contextmenu',function(e){if(!EDIT_MODE)return;e.preventDefault();_blkId=a.id;openCtx('bctx',e);});
+        if(_selectedBlkIds.indexOf(a.id)!==-1) blk.classList.add('selected');
         blk.addEventListener('mouseenter',function(e){_selBlkId=a.id;showBlkTooltip(e,blkTooltipHtml(a,proj),proj.color);});
+        if(_selectedBlkIds.indexOf(a.id)!==-1) blk.classList.add('selected');
         blk.addEventListener('mousemove',function(e){posTooltip(e);});
         blk.addEventListener('mouseleave',function(){hideBlkTooltip();});
         blk.addEventListener('click',function(e){
           e.stopPropagation();
           _blkId=a.id; _selBlkId=a.id;
           if(e.ctrlKey||e.metaKey){
+            e.preventDefault();
             if(blk.classList.contains('selected')){blk.classList.remove('selected');_selectedBlkIds=_selectedBlkIds.filter(function(id){return id!==a.id;});}
             else{blk.classList.add('selected');_selectedBlkIds.push(a.id);}
           } else {
@@ -1247,12 +1250,14 @@ function render(){
         makeResizeLeft(lh,blk,a);
         blk.addEventListener('contextmenu',function(e){if(!EDIT_MODE)return;e.preventDefault();_blkId=a.id;if(!blk.classList.contains('selected')){document.querySelectorAll('.blk.selected').forEach(function(b){b.classList.remove('selected');});_selectedBlkIds=[a.id];blk.classList.add('selected');_selBlkId=a.id;}openCtx('bctx',e);});
         blk.addEventListener('mouseenter',function(e){_selBlkId=a.id;showBlkTooltip(e,blkTooltipHtml(a,proj),proj.color);});
+        if(_selectedBlkIds.indexOf(a.id)!==-1) blk.classList.add('selected');
         blk.addEventListener('mousemove',function(e){posTooltip(e);});
         blk.addEventListener('mouseleave',function(){hideBlkTooltip();});
         blk.addEventListener('click',function(e){
           e.stopPropagation();
           _blkId=a.id; _selBlkId=a.id;
           if(e.ctrlKey||e.metaKey){
+            e.preventDefault();
             if(blk.classList.contains('selected')){blk.classList.remove('selected');_selectedBlkIds=_selectedBlkIds.filter(function(id){return id!==a.id;});}
             else{blk.classList.add('selected');_selectedBlkIds.push(a.id);}
           } else {
