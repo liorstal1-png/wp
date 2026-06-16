@@ -1235,14 +1235,25 @@ function render(){
         var rh=document.createElement('div'); rh.className='rhandle'; blk.appendChild(rh);
         var lh=document.createElement('div'); lh.className='lhandle'; blk.appendChild(lh);
         makeResizeLeft(lh,blk,a);
-        blk.addEventListener('contextmenu',function(e){if(!EDIT_MODE)return;e.preventDefault();_blkId=a.id;openCtx('bctx',e);});
+        blk.addEventListener('contextmenu',function(e){
+          if(!EDIT_MODE)return;
+          e.preventDefault();e.stopPropagation();
+          _blkId=a.id;
+          // אם הבלוק הנוכחי לא בבחירה — בחר רק אותו
+          if(!blk.classList.contains('selected')){
+            document.querySelectorAll('.blk.selected').forEach(function(b){b.classList.remove('selected');});
+            _selectedBlkIds=[a.id];
+            blk.classList.add('selected');
+            _selBlkId=a.id;
+          }
+          openMultiCtx(e);
+        });
         blk.addEventListener('mouseenter',function(e){_selBlkId=a.id;showBlkTooltip(e,blkTooltipHtml(a,proj),proj.color);});
         blk.addEventListener('mousemove',function(e){posTooltip(e);});
         blk.addEventListener('mouseleave',function(){hideBlkTooltip();});
         blk.addEventListener('click',function(e){
           e.stopPropagation();
           if(e.ctrlKey||e.metaKey){
-            // בחירה מרובה
             if(blk.classList.contains('selected')){
               blk.classList.remove('selected');
               _selectedBlkIds=_selectedBlkIds.filter(function(id){return id!==a.id;});
@@ -1252,22 +1263,10 @@ function render(){
             }
           } else {
             document.querySelectorAll('.blk.selected').forEach(function(b){b.classList.remove('selected');});
-            _selectedBlkIds=[];
-            blk.classList.add('selected');
             _selectedBlkIds=[a.id];
+            blk.classList.add('selected');
           }
           _selBlkId=a.id;
-        });
-        blk.addEventListener('contextmenu',function(e){
-          e.preventDefault();e.stopPropagation();
-          // אם הבלוק הנוכחי לא בבחירה — בחר רק אותו
-          if(!blk.classList.contains('selected')){
-            document.querySelectorAll('.blk.selected').forEach(function(b){b.classList.remove('selected');});
-            _selectedBlkIds=[a.id];
-            blk.classList.add('selected');
-            _selBlkId=a.id;
-          }
-          openMultiCtx(e);
         });
         makeDrag(blk,a); makeResize(rh,blk,a);
         row.appendChild(blk);
