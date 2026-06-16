@@ -361,7 +361,7 @@ body:not(.edit-mode) .edit-only{display:none!important;}
     </div>
   </div>
   <button class="btn" id="lock-btn" onclick="toggleEdit()" style="margin-right:auto;">🔒 עריכה</button>
-  <button class="btn" id="show-al-btn" onclick="toggleShowAl()" title="הצג/הסתר שיבוץ לא סופי">🔘 שיבוץ לא סופי</button>
+  <button class="btn" id="show-al-btn" onclick="toggleShowAl()" title="הצג/הסתר שיבוץ לא סופי">👁 הצג שיבוץ לא סופי</button>
   <button class="btn" id="tp-toggle-btn" onclick="toggleTPPanel()" title="הצג/הסתר תוכניות עבודה">📋 תוכנית עבודה</button>
   <button class="btn edit-only" onclick="toggleNotesPanel()" id="notes-btn">📝 הערות</button>
 </div>
@@ -1939,6 +1939,7 @@ function toggleShowAl(){
   if(mi)mi.textContent=SHOW_AL?'🙈 הסתר שיבוץ לא סופי':'👁 הצג שיבוץ לא סופי';
   var btn=document.getElementById('show-al-btn');
   if(btn){
+    btn.textContent=SHOW_AL?'🙈 הסתר שיבוץ לא סופי':'👁 הצג שיבוץ לא סופי';
     btn.style.background=SHOW_AL?'var(--acc)':'';
     btn.style.color=SHOW_AL?'#fff':'';
     btn.style.borderColor=SHOW_AL?'var(--acc)':'';
