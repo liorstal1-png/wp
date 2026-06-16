@@ -3937,9 +3937,11 @@ function renderTPOverlays(){
       if(!overlapping.length) return;
 
       // בדוק אם ה-assignments תואמים לפרויקט התוכנית
+      // רק כשיש globalId משני הצדדים
+      if(!projGlobalId) return; // אין ID לתוכנית — לא מציגים התראה
       var hasMismatch=overlapping.some(function(a){
         var ganttProj=D.projects.find(function(gp){return gp.id===a.projectId;});
-        if(!ganttProj||!ganttProj.globalId||!projGlobalId) return true; // אין ID — mismatch
+        if(!ganttProj||!ganttProj.globalId) return false; // אין ID לפרויקט שיבוץ — לא mismatch
         return ganttProj.globalId!==projGlobalId;
       });
 
@@ -3948,7 +3950,7 @@ function renderTPOverlays(){
       // הוסף ⚠️ על כל בלוק שיבוץ חופף שלא תואם
       overlapping.forEach(function(a){
         var ganttProj=D.projects.find(function(gp){return gp.id===a.projectId;});
-        var isMismatch=!ganttProj||!ganttProj.globalId||!projGlobalId||ganttProj.globalId!==projGlobalId;
+        var isMismatch=ganttProj&&ganttProj.globalId&&projGlobalId&&ganttProj.globalId!==projGlobalId;
         if(!isMismatch) return;
         var aBlk=document.querySelector('.blk[data-aid="'+a.id+'"]');
         if(!aBlk||aBlk.querySelector('.tp-warn')) return;
@@ -3969,13 +3971,16 @@ function renderTPOverlays(){
         (function(blk,w,html){
           function posWarn(){
             var r=blk.getBoundingClientRect();
-            if(r.width===0||r.right<0||r.left>window.innerWidth){w.style.display='none';return;}
+            // הסתר אם מחוץ ל-viewport אנכית או אופקית
+            if(r.width===0||r.right<0||r.left>window.innerWidth||r.bottom<0||r.top>window.innerHeight){
+              w.style.display='none';return;
+            }
             w.style.display='block';
             w.style.left=(r.right-20)+'px';
             w.style.top=(r.top+2)+'px';
           }
           posWarn();
-          w._posWarn=posWarn; // שמור לשימוש חוזר
+          w._posWarn=posWarn;
           blk.addEventListener('mouseenter',function(e){showBlkTooltip(e,html);});
           blk.addEventListener('mousemove',posTooltip);
           blk.addEventListener('mouseleave',hideBlkTooltip);
@@ -3983,9 +3988,10 @@ function renderTPOverlays(){
       });
     });
   });
-  // מאזין גלילה מרכזי לעדכון מיקום כל ⚠️
+  // מאזין גלילה מרכזי — פעם אחת בלבד
   var tlwrap=document.getElementById('tlwrap');
-  if(tlwrap){
+  if(tlwrap&&!tlwrap._tpWarnScroll){
+    tlwrap._tpWarnScroll=true;
     tlwrap.addEventListener('scroll',function(){
       document.querySelectorAll('.tp-warn').forEach(function(w){
         if(w._posWarn) w._posWarn();
