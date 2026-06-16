@@ -1822,6 +1822,7 @@ function makeDrag(blk,a){
   }
   blk.addEventListener('mousedown',function(e){
     if(!EDIT_MODE)return;
+    if(e.ctrlKey||e.metaKey)return; // Ctrl+Click — אל תתחיל drag
     if(e.target.classList.contains('rhandle')||e.target.classList.contains('lhandle')||e.target.classList.contains('bedit')||e.target.classList.contains('binput'))return;
     drag=true;blk.classList.add('drag');sx=e.clientX;sl=parseFloat(blk.style.left);lastY=e.clientY;
     _selBlkId=a.id;
