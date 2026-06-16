@@ -356,11 +356,12 @@ body:not(.edit-mode) .edit-only{display:none!important;}
       <div class="ci" onclick="openSummary();document.getElementById('more-menu').style.display='none';">📊 מבט על</div>
       <div class="ci" onclick="openAnalytics();document.getElementById('more-menu').style.display='none';">📈 ניתוחים</div>
       <div style="height:1px;background:var(--brd);margin:4px 0;"></div>
-      <div class="ci" id="toggle-al-mi" onclick="toggleShowAl();">👁 הצג שיבוץ על</div>
+      <div class="ci" id="toggle-al-mi" onclick="toggleShowAl();document.getElementById('more-menu').style.display='none';">👁 הצג שיבוץ לא סופי</div>
 
     </div>
   </div>
   <button class="btn" id="lock-btn" onclick="toggleEdit()" style="margin-right:auto;">🔒 עריכה</button>
+  <button class="btn" id="show-al-btn" onclick="toggleShowAl()" title="הצג/הסתר שיבוץ לא סופי">🔘 שיבוץ לא סופי</button>
   <button class="btn" id="tp-toggle-btn" onclick="toggleTPPanel()" title="הצג/הסתר תוכניות עבודה">📋 תוכנית עבודה</button>
   <button class="btn edit-only" onclick="toggleNotesPanel()" id="notes-btn">📝 הערות</button>
 </div>
@@ -450,7 +451,7 @@ body:not(.edit-mode) .edit-only{display:none!important;}
         <select id="pclass"><option value="">--</option><option value="לקוח">לקוח</option><option value="פנימי">פנימי</option></select>
       </div>
       <div class="fld"><label>סטטוס</label>
-        <select id="ps"><option value="בביצוע">בביצוע</option><option value="לאחר HLP">לאחר HLP</option><option value="שיבוץ על">שיבוץ על</option></select>
+        <select id="ps"><option value="בביצוע">בביצוע</option><option value="לאחר HLP">לאחר HLP</option><option value="שיבוץ לא סופי">שיבוץ לא סופי</option></select>
       </div>
       <div class="fld" id="p-parent-fld"><label>פרויקט אב</label><select id="p-parent"><option value="">ללא</option></select></div>
       <div class="fld"><label>צבע</label><div class="crow" id="pcrow"></div></div>
@@ -590,7 +591,7 @@ body:not(.edit-mode) .edit-only{display:none!important;}
   </div>
 </div>
 
-<div class="ctx" id="bctx"><div class="ci" onclick="cEditBlk()">✏️ ערוך</div><div class="ci" id="bctx-al" onclick="cToggleAl()">⬜ סמן שיבוץ על</div><div class="ci del" onclick="cDelBlk()">🗑️ מחק</div></div>
+<div class="ctx" id="bctx"><div class="ci" onclick="cEditBlk()">✏️ ערוך</div><div class="ci" id="bctx-al" onclick="cToggleAl()">⬜ סמן שיבוץ לא סופי</div><div class="ci del" onclick="cDelBlk()">🗑️ מחק</div></div>
 <div class="ctx" id="msctx"><div class="ci" onclick="cEditMs()">✏️ ערוך אבן דרך</div><div class="ci del" onclick="cDelMs()">🗑️ מחק</div></div>
 <div class="ctx" id="wctx"><div class="ci" onclick="cEditWrk()">✏️ ערוך עובד</div><div class="ci del" onclick="cDelWrk()">🗑️ מחק עובד</div></div>
 <div class="ctx" id="sctx"><div class="ci" onclick="cEditSpr()">✏️ ערוך ספרינט</div><div class="ci del" onclick="cDelSpr()">🗑️ מחק ספרינט</div></div>
@@ -608,7 +609,7 @@ body:not(.edit-mode) .edit-only{display:none!important;}
         <select id="ep-class"><option value="">--</option><option value="לקוח">לקוח</option><option value="פנימי">פנימי</option></select>
       </div>
       <div class="fld"><label>סטטוס</label>
-        <select id="ep-status"><option value="בביצוע">בביצוע</option><option value="לאחר HLP">לאחר HLP</option><option value="שיבוץ על">שיבוץ על</option></select>
+        <select id="ep-status"><option value="בביצוע">בביצוע</option><option value="לאחר HLP">לאחר HLP</option><option value="שיבוץ לא סופי">שיבוץ לא סופי</option></select>
       </div>
       <div class="fld" id="ep-parent-fld"><label>פרויקט אב</label><select id="ep-parent"><option value="">ללא</option></select></div>
       <div class="fld"><label>צבע</label><div class="crow" id="ep-colors"></div></div>
@@ -645,7 +646,7 @@ var FP_FILTER=new Set();
 var SHOW_AL=false;
 var _holCache=null; // cache of holiday week indices
 var _msVisible=[];
-var SHOW_MS_ROW=true; // הצג/הסתר שורת אבני דרך // false=הסתר שיבוץ על, true=הצג // project ids to filter (empty = show all)
+var SHOW_MS_ROW=true; // הצג/הסתר שורת אבני דרך // false=הסתר שיבוץ לא סופי, true=הצג // project ids to filter (empty = show all)
 var _blkId=null,_wrkId=null,_sprId=null,_aId=null,_ewId=null,_esId=null,_selBlkId=null;
 
 // ── dates ─────────────────────────────────────────────────────────────────────
@@ -750,7 +751,7 @@ function lightenColor(hex,amount){
   return '#'+r.toString(16).padStart(2,'0')+g.toString(16).padStart(2,'0')+b.toString(16).padStart(2,'0');
 }
 function getDisplayColor(proj){
-  if(proj.status==='שיבוץ על') return lightenColor(proj.color,0.65);
+  if(proj.status==='שיבוץ לא סופי') return lightenColor(proj.color,0.65);
   return proj.color;
 }
 // ── baseline ─────────────────────────────────────────────────────────────────
@@ -1112,7 +1113,7 @@ function render(){
         var _pp1=proj.parentId?(D.parentProjects||[]).find(function(x){return x.id===proj.parentId;}):null;
         tg.textContent=a.absence?(a.absenceReason||'העדרות'):(_pp1?_pp1.name+' - '+proj.name:proj.name);
         if(a.absence){blk.style.background='#2C2C2C';tg.style.color='rgba(255,255,255,.85)';}
-        else{blk.style.background=getDisplayColor(proj);if(proj.status==='שיבוץ על')tg.style.color='rgba(0,0,0,.75)';}
+        else{blk.style.background=getDisplayColor(proj);if(proj.status==='שיבוץ לא סופי')tg.style.color='rgba(0,0,0,.75)';}
         var wrap1=document.createElement('div'); wrap1.className='blk-content';
         wrap1.appendChild(tg);
         var noteEl=document.createElement('div'); noteEl.className='blk-notefield';
@@ -1188,7 +1189,7 @@ function render(){
           blk.style.border='none';
           t.style.color='rgba(255,255,255,.85)';
         } else {
-          var isAlBlk=proj.status==='שיבוץ על'||a.isAl===true;
+          var isAlBlk=proj.status==='שיבוץ לא סופי'||a.isAl===true;
           var dispColor=isAlBlk?lightenColor(proj.color,0.65):proj.color;
           blk.style.background=dispColor;
           if(isAlBlk){
@@ -1208,7 +1209,7 @@ function render(){
         // Editable note directly on block
         var noteEl=document.createElement('div');
         noteEl.className='blk-notefield';
-        if(proj.status==='שיבוץ על')noteEl.style.color='rgba(0,0,0,.6)';
+        if(proj.status==='שיבוץ לא סופי')noteEl.style.color='rgba(0,0,0,.6)';
         noteEl.contentEditable=EDIT_MODE?'true':'false';
         noteEl.textContent=a.note||'';
         noteEl.setAttribute('placeholder','הוסף הערה...');
@@ -1918,7 +1919,7 @@ function openCtx(id,e){
   if(id==='bctx'){
     var a=D.assignments.find(function(x){return x.id===_blkId;});
     var alBtn=document.getElementById('bctx-al');
-    if(alBtn&&a)alBtn.textContent=a.isAl===true?'✅ הסר שיבוץ על':'⬜ סמן שיבוץ על';
+    if(alBtn&&a)alBtn.textContent=a.isAl===true?'✅ הסר שיבוץ לא סופי':'⬜ סמן שיבוץ לא סופי';
   }
 
   var m=document.getElementById(id);m.style.top=e.clientY+'px';m.style.left=e.clientX+'px';m.classList.add('open');
@@ -1934,9 +1935,14 @@ function cToggleAl(){
 }
 function toggleShowAl(){
   SHOW_AL=!SHOW_AL;
-  // עדכן טקסט בתפריט
   var mi=document.getElementById('toggle-al-mi');
-  if(mi)mi.textContent=SHOW_AL?'🙈 הסתר שיבוץ על':'👁 הצג שיבוץ על';
+  if(mi)mi.textContent=SHOW_AL?'🙈 הסתר שיבוץ לא סופי':'👁 הצג שיבוץ לא סופי';
+  var btn=document.getElementById('show-al-btn');
+  if(btn){
+    btn.style.background=SHOW_AL?'var(--acc)':'';
+    btn.style.color=SHOW_AL?'#fff':'';
+    btn.style.borderColor=SHOW_AL?'var(--acc)':'';
+  }
   document.getElementById('more-menu').style.display='none';
   render();
 }
@@ -2975,7 +2981,7 @@ function openSummary(){
       var x=Math.max(0,dateX(fd(pd(a.end))));
       var xRight=Math.min(TW,dateX(fd(pd(a.start)))+WW_);
       var w=Math.max(xRight-x,WW_*0.4);
-      var isAlBlk=a.isAl===true||proj.status==='שיבוץ על';
+      var isAlBlk=a.isAl===true||proj.status==='שיבוץ לא סופי';
       var bgStyle=isAlBlk
         ?'background:'+dc+';background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0) 0px,rgba(255,255,255,0) 6px,rgba(255,255,255,.3) 6px,rgba(255,255,255,.3) 8px);'
         :'background:'+dc+';';
@@ -3961,7 +3967,6 @@ function renderTPOverlays(){
 
         // מצא assignments חופפים — של העובד ישירות
         var overlapping=D.assignments.filter(function(a){
-          if(a.absence) return false;
           var wMatch=String(a.workerId)===String(w.id);
           return wMatch &&
             pd(a.start).getTime()<=taskEnd &&
@@ -3977,7 +3982,7 @@ function renderTPOverlays(){
 
           // מצא את הבלוק ב-DOM
           var aBlk=document.querySelector('.blk[data-aid="'+a.id+'"]');
-          if(!aBlk||aBlk.dataset.absence) return;
+          if(!aBlk) return;
           var title=aBlk.querySelector('.btitle');
           if(!title) return;
 
