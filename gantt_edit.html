@@ -1288,8 +1288,9 @@ function render(){
       }
       // ── tp overlay row ── (נבנה בתוך render לסנכרון מלא)
       if(_tpActive&&_tpActive.size>0){
-        // נקה ⚠️ ישנים מבלוקי שיבוץ
+        // נקה ⚠️ ישנים ואסף mismatches חדשים
         document.querySelectorAll('.tp-warn').forEach(function(el){el.remove();});
+        _tpMismatches=[];
         var tpRow=document.createElement('div');
         tpRow.className='tp-row';
         tpRow.style.cssText='position:relative;display:flex;direction:ltr;width:'+TW+'px;height:22px;border-bottom:1px solid #D8D6D0;background:#EFEDE8;overflow:hidden;flex-shrink:0;';
@@ -1342,38 +1343,20 @@ function render(){
               _tl.textContent=task.name;
               _tb.appendChild(_tl);
               tpRow.appendChild(_tb);
-              // ⚠️ על בלוק השיבוץ החופף — בתוך tlrow (נגלל עם ציר הזמן)
+              // אסוף mismatch לטיפול ב-renderTPOverlays אחרי הDOM בנוי
               if(hasMismatch){
-                var planProjName=proj.name||'תוכנית עבודה';
-                var tipHtml=
-                  '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">\u26a0\ufe0f \u05d0\u05d9-\u05d4\u05ea\u05d0\u05de\u05d4</div>'+
-                  '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">\u05de\u05e9\u05d9\u05de\u05d4: <span style=\"color:#fff\">'+task.name+'</span></div>'+
-                  '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">\u05ea\u05d5\u05db\u05e0\u05d9\u05ea: <span style=\"color:#fff\">'+planProjName+'</span></div>'+
-                  '<div style="font-size:10px;color:#aac4e0;">'+task.start+' \u2192 '+task.end+'</div>';
-                // מצא את הbלוק השיבוץ החופף והוסף ⚠️ עליו
                 overlappingAssignments.forEach(function(oa){
                   var oaProj=D.projects.find(function(gp){return gp.id===oa.projectId;});
                   var isMM=!oaProj||!oaProj.globalId||!projGlobalId||oaProj.globalId!==projGlobalId;
                   if(!isMM) return;
-                  // מצא tlrow של העובד
-                  var tlRow=document.querySelector('.tlrow[data-wid="'+w.id+'"]');
-                  if(!tlRow) return;
-                  // חשב x של assignment על ציר הזמן
-                  var _ax=dateX(oa.end);
-                  var _axS=dateX(oa.start);
-                  var _aw=_axS-_ax+WW_;
-                  // מיקום ⚠️ בפינה ימנית עליונה של הבלוק
-                  var _wx=_axS-14;
-                  if(tlRow.querySelector('.tp-warn[data-ax="'+Math.round(_wx)+'"]')) return;
-                  var warnEl=document.createElement('div');
-                  warnEl.className='tp-warn';
-                  warnEl.dataset.ax=Math.round(_wx);
-                  warnEl.style.cssText='position:absolute;top:3px;left:'+_wx+'px;font-size:13px;line-height:1;z-index:15;pointer-events:auto;cursor:default;';
-                  warnEl.textContent='\u26a0\ufe0f';
-                  warnEl.addEventListener('mouseenter',function(e){showBlkTooltip(e,tipHtml);});
-                  warnEl.addEventListener('mousemove',posTooltip);
-                  warnEl.addEventListener('mouseleave',hideBlkTooltip);
-                  tlRow.appendChild(warnEl);
+                  _tpMismatches.push({
+                    wid:w.id,
+                    aid:oa.id,
+                    taskName:task.name,
+                    projName:proj.name||'תוכנית עבודה',
+                    start:task.start,
+                    end:task.end
+                  });
                 });
               }
             });
@@ -3843,7 +3826,8 @@ function openAnalytics(){
 
 
 // ── Work Plan Overlay ─────────────────────────────────────────────────────────
-var _tpActive = new Set(); // active te_proj_* keys
+var _tpActive = new Set();
+var _tpMismatches = []; // נאסף בrender, מוצג ב-renderTPOverlays // active te_proj_* keys
 var _tpPanelOpen = false;
 
 function toggleTPPanel(){
@@ -3938,6 +3922,28 @@ function buildTPPanel(){
 // Call this from render() to draw overlays after rows are built
 function renderTPOverlays(){
   document.querySelectorAll('.tp-warn').forEach(function(el){el.remove();});
+  if(!_tpMismatches||!_tpMismatches.length) return;
+  _tpMismatches.forEach(function(mm){
+    // מצא את בלוק השיבוץ לפי data-aid
+    var aBlk=document.querySelector('.blk[data-aid="'+mm.aid+'"]');
+    if(!aBlk) return;
+    // אל תוסיף כפול
+    if(aBlk.querySelector('.tp-warn')) return;
+    var tipHtml=
+      '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">⚠️ אי-התאמה</div>'+
+      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">משימה: <span style="color:#fff;">'+mm.taskName+'</span></div>'+
+      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">תוכנית: <span style="color:#fff;">'+mm.projName+'</span></div>'+
+      '<div style="font-size:10px;color:#aac4e0;">'+mm.start+' → '+mm.end+'</div>';
+    var warnEl=document.createElement('div');
+    warnEl.className='tp-warn';
+    warnEl.style.cssText='position:absolute;top:2px;right:4px;font-size:13px;line-height:1;z-index:15;pointer-events:auto;cursor:default;';
+    warnEl.textContent='⚠️';
+    warnEl.addEventListener('mouseenter',function(e){showBlkTooltip(e,tipHtml);});
+    warnEl.addEventListener('mousemove',posTooltip);
+    warnEl.addEventListener('mouseleave',hideBlkTooltip);
+    // הוסף לתוך הבלוק — position:relative כבר קיים על .blk
+    aBlk.appendChild(warnEl);
+  });
 }
 
 window.toggleTPPanel = toggleTPPanel;
