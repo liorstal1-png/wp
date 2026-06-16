@@ -361,7 +361,8 @@ body:not(.edit-mode) .edit-only{display:none!important;}
     </div>
   </div>
   <button class="btn" id="lock-btn" onclick="toggleEdit()" style="margin-right:auto;">🔒 עריכה</button>
-  <button class="btn" id="show-al-btn" onclick="toggleShowAl()" title="הצג/הסתר שיבוץ לא סופי">👁 הצג שיבוץ לא סופי</button>
+  <button class="btn edit-only" id="show-al-btn" onclick="toggleShowAl()" title="הצג/הסתר שיבוץ לא סופי">👁 הצג שיבוץ לא סופי</button>
+  <button class="btn edit-only" onclick="convertAllAlToRegular()" title="הפוך כל שיבוצים לא סופיים לרגילים" style="color:#E24B4A;">✅ אשר הכל</button>
   <button class="btn" id="tp-toggle-btn" onclick="toggleTPPanel()" title="הצג/הסתר תוכניות עבודה">📋 תוכנית עבודה</button>
   <button class="btn edit-only" onclick="toggleNotesPanel()" id="notes-btn">📝 הערות</button>
 </div>
@@ -647,7 +648,7 @@ var SHOW_AL=false;
 var _holCache=null; // cache of holiday week indices
 var _msVisible=[];
 var SHOW_MS_ROW=true; // הצג/הסתר שורת אבני דרך // false=הסתר שיבוץ לא סופי, true=הצג // project ids to filter (empty = show all)
-var _blkId=null,_wrkId=null,_sprId=null,_aId=null,_ewId=null,_esId=null,_selBlkId=null;
+var _blkId=null,_wrkId=null,_sprId=null,_aId=null,_ewId=null,_esId=null,_selBlkId=null,_selectedBlkIds=[];
 
 // ── dates ─────────────────────────────────────────────────────────────────────
 var TODAY=new Date(); TODAY.setHours(12,0,0,0);
@@ -1240,9 +1241,33 @@ function render(){
         blk.addEventListener('mouseleave',function(){hideBlkTooltip();});
         blk.addEventListener('click',function(e){
           e.stopPropagation();
-          document.querySelectorAll('.blk.selected').forEach(function(b){b.classList.remove('selected');});
-          blk.classList.add('selected');
+          if(e.ctrlKey||e.metaKey){
+            // בחירה מרובה
+            if(blk.classList.contains('selected')){
+              blk.classList.remove('selected');
+              _selectedBlkIds=_selectedBlkIds.filter(function(id){return id!==a.id;});
+            } else {
+              blk.classList.add('selected');
+              _selectedBlkIds.push(a.id);
+            }
+          } else {
+            document.querySelectorAll('.blk.selected').forEach(function(b){b.classList.remove('selected');});
+            _selectedBlkIds=[];
+            blk.classList.add('selected');
+            _selectedBlkIds=[a.id];
+          }
           _selBlkId=a.id;
+        });
+        blk.addEventListener('contextmenu',function(e){
+          e.preventDefault();e.stopPropagation();
+          // אם הבלוק הנוכחי לא בבחירה — בחר רק אותו
+          if(!blk.classList.contains('selected')){
+            document.querySelectorAll('.blk.selected').forEach(function(b){b.classList.remove('selected');});
+            _selectedBlkIds=[a.id];
+            blk.classList.add('selected');
+            _selBlkId=a.id;
+          }
+          openMultiCtx(e);
         });
         makeDrag(blk,a); makeResize(rh,blk,a);
         row.appendChild(blk);
@@ -1926,6 +1951,64 @@ function openCtx(id,e){
   setTimeout(function(){document.addEventListener('click',function(){m.classList.remove('open');},{once:true});},10);
 }
 function cEditBlk(){var a=D.assignments.find(function(x){return x.id===_blkId;});if(a)openAM(a.workerId,a.start,a.end,a.projectId,a.id);}
+function openMultiCtx(e){
+  var ctx=document.getElementById('bctx');
+  if(!ctx) return;
+  // בנה תפריט לפי בחירה
+  var hasAl=_selectedBlkIds.some(function(id){var a=D.assignments.find(function(x){return x.id===id;});return a&&a.isAl;});
+  var hasNonAl=_selectedBlkIds.some(function(id){var a=D.assignments.find(function(x){return x.id===id;});return a&&!a.isAl;});
+  ctx.innerHTML='';
+  if(_selectedBlkIds.length>1){
+    var hdr=document.createElement('div');
+    hdr.style.cssText='padding:5px 13px;font-size:11px;color:var(--mut);border-bottom:1px solid var(--brd);margin-bottom:3px;';
+    hdr.textContent=_selectedBlkIds.length+' בלוקים נבחרו';
+    ctx.appendChild(hdr);
+  }
+  if(hasNonAl){
+    var d1=document.createElement('div');d1.className='ci';d1.textContent='⬜ סמן כשיבוץ לא סופי';
+    d1.onclick=function(){
+      snapshot();
+      _selectedBlkIds.forEach(function(id){var a=D.assignments.find(function(x){return x.id===id;});if(a)a.isAl=true;});
+      closeCtx();save();render();
+    };
+    ctx.appendChild(d1);
+  }
+  if(hasAl){
+    var d2=document.createElement('div');d2.className='ci';d2.textContent='✅ הסר שיבוץ לא סופי';
+    d2.onclick=function(){
+      snapshot();
+      _selectedBlkIds.forEach(function(id){var a=D.assignments.find(function(x){return x.id===id;});if(a)a.isAl=false;});
+      closeCtx();save();render();
+    };
+    ctx.appendChild(d2);
+  }
+  if(_selectedBlkIds.length===1){
+    var d3=document.createElement('div');d3.className='ci';d3.textContent='✏️ ערוך';d3.onclick=function(){closeCtx();cEditBlk();};ctx.appendChild(d3);
+    var sep=document.createElement('div');sep.style.cssText='height:1px;background:var(--brd);margin:3px 0;';ctx.appendChild(sep);
+    var d4=document.createElement('div');d4.className='ci del';d4.textContent='🗑️ מחק';d4.onclick=function(){closeCtx();cDelBlk();};ctx.appendChild(d4);
+  } else {
+    var sep2=document.createElement('div');sep2.style.cssText='height:1px;background:var(--brd);margin:3px 0;';ctx.appendChild(sep2);
+    var d5=document.createElement('div');d5.className='ci del';d5.textContent='🗑️ מחק '+_selectedBlkIds.length+' בלוקים';
+    d5.onclick=function(){
+      if(!confirm('למחוק '+_selectedBlkIds.length+' בלוקים?'))return;
+      snapshot();
+      var ids=_selectedBlkIds.slice();
+      D.assignments=D.assignments.filter(function(a){return ids.indexOf(a.id)===-1;});
+      _selectedBlkIds=[];closeCtx();save();render();
+    };
+    ctx.appendChild(d5);
+  }
+  ctx.style.cssText='display:block;left:'+e.clientX+'px;top:'+e.clientY+'px;';
+}
+
+function convertAllAlToRegular(){
+  if(!confirm('להפוך את כל השיבוצים הלא סופיים לשיבוצים רגילים?'))return;
+  snapshot();
+  D.assignments.forEach(function(a){if(a.isAl)a.isAl=false;});
+  D.projects.forEach(function(p){if(p.status==='שיבוץ לא סופי')p.status='בביצוע';});
+  save();render();
+}
+
 function cToggleAl(){
   var a=D.assignments.find(function(x){return x.id===_blkId;});
   if(!a)return;
