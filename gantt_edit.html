@@ -1183,10 +1183,10 @@ function render(){
         t.textContent=_lbl2;
         // style based on status or absence
         if(a.absence){
+          blk.dataset.absence='1';
           blk.style.background='#2C2C2C';
           blk.style.backgroundImage='none';
           blk.style.border='none';
-          blk.dataset.absence='1';
           t.style.color='rgba(255,255,255,.85)';
         } else {
           var isAlBlk=proj.status==='שיבוץ על'||a.isAl===true;
@@ -3925,30 +3925,32 @@ function renderTPOverlays(){
   // נקה ⚠️ ישנים
   document.querySelectorAll('.blk[data-tp-warn]').forEach(function(blk){
     var t=blk.querySelector('.btitle');
-    if(t) t.textContent=t.textContent.replace(/^\u26a0\ufe0f /,'');
+    if(t) t.textContent=t.textContent.replace(/^⚠️ /,'');
     delete blk.dataset.tpWarn;
+    delete blk._tpTipHtml;
   });
   if(!_tpMismatches||!_tpMismatches.length) return;
-  var seen={};
   _tpMismatches.forEach(function(mm){
-    if(seen[mm.aid]) return;
-    seen[mm.aid]=1;
     var aBlk=document.querySelector('.blk[data-aid="'+mm.aid+'"]');
-    if(!aBlk||aBlk.dataset.tpWarn) return;
-    if(aBlk.dataset.absence) return; // אל תסמן העדרויות
+    if(!aBlk) return;
+    // דלג על העדרויות בלבד
+    if(aBlk.dataset.absence) return;
+    // אם כבר סומן — רק עדכן tooltip (אולי יש מספר משימות על אותו בלוק)
     var title=aBlk.querySelector('.btitle');
     if(!title) return;
-    aBlk.dataset.tpWarn='1';
-    title.textContent='\u26a0\ufe0f '+title.textContent;
+    if(!aBlk.dataset.tpWarn){
+      aBlk.dataset.tpWarn='1';
+      title.textContent='⚠️ '+title.textContent;
+    }
+    // tooltip — הוסף משימה לרשימה
     var tipHtml=
-      '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">\u26a0\ufe0f \u05d0\u05d9-\u05d4\u05ea\u05d0\u05de\u05d4</div>'+
-      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">\u05de\u05e9\u05d9\u05de\u05d4: <span style="color:#fff;">'+mm.taskName+'</span></div>'+
-      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">\u05ea\u05d5\u05db\u05e0\u05d9\u05ea: <span style="color:#fff;">'+mm.projName+'</span></div>'+
-      '<div style="font-size:10px;color:#aac4e0;">'+mm.start+' \u2192 '+mm.end+'</div>';
-    // החלף tooltip קיים
+      '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">⚠️ אי-התאמה</div>'+
+      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">משימה: <span style="color:#fff;">'+mm.taskName+'</span></div>'+
+      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">תוכנית: <span style="color:#fff;">'+mm.projName+'</span></div>'+
+      '<div style="font-size:10px;color:#aac4e0;">'+mm.start+' → '+mm.end+'</div>';
     aBlk._tpTipHtml=tipHtml;
   });
-  // עדכן mouseenter לכל הבלוקים עם ⚠️
+  // הוסף mouseenter לכל הבלוקים המסומנים
   document.querySelectorAll('.blk[data-tp-warn]').forEach(function(blk){
     blk.addEventListener('mouseenter',function(e){
       if(blk._tpTipHtml) showBlkTooltip(e,blk._tpTipHtml);
