@@ -1183,7 +1183,6 @@ function render(){
         t.textContent=_lbl2;
         // style based on status or absence
         if(a.absence){
-          blk.dataset.absence='1';
           blk.style.background='#2C2C2C';
           blk.style.backgroundImage='none';
           blk.style.border='none';
@@ -1300,8 +1299,8 @@ function render(){
           _tc.style.cssText='width:'+WW_+'px;height:22px;border-right:1px solid #e0deda;flex-shrink:0;box-sizing:border-box;';
           tpRow.appendChild(_tc);
         }
-        var _tpProjs=getTPProjects().filter(function(p){return _tpActive.has(p.key);});
-        if(w.globalId&&_tpProjs.length){
+        if(w.globalId){
+          var _tpProjs=getTPProjects().filter(function(p){return _tpActive.has(p.key);});
           _tpProjs.forEach(function(proj){
             var projGlobalId;
             try{var _raw=localStorage.getItem(proj.key);if(_raw){var _pm=JSON.parse(_raw);projGlobalId=_pm&&_pm.meta?_pm.meta.globalId:undefined;}}catch(e){}
@@ -1316,18 +1315,14 @@ function render(){
               var _dr=Math.round(diffW(TL_START,pd(task.start))*WW_);
               var _tw=_weeks*WW_-2;
               var _tx=TW-_dr-_tw;
-              // חתוך משימה שמתחילה לפני TL_START
-              var _effStart=pd(task.start).getTime()<TL_START.getTime()?fd(TL_START):task.start;
-              var _dr2=Math.round(diffW(TL_START,pd(_effStart))*WW_);
-              var _tx2=TW-_dr2-_tw;
-              if(_tx2+_tw<0||_tx2>TW)return; // גם אחרי חיתוך — מחוץ לציר
-              var _tx=_tx2; // השתמש ב-_tx המתוקן לציור
-              // מצא assignments של העובד שחופפים לטווח המשימה — כולל assignments של הצוות שלו
-              var workerTeamWid=w.team?'team_'+w.team:null;
+              if(_tx+_tw<0||_tx>TW)return;
+
+              // בדוק התאמה: האם הפרויקט בשיבוץ שהעובד משובץ אליו בטווח זה תואם לפרויקט התוכנית?
+              var taskStart=pd(task.start).getTime();
+              var taskEnd=pd(task.end).getTime();
+              // מצא assignments של העובד שחופפים לטווח המשימה
               var overlappingAssignments=D.assignments.filter(function(a){
-                var isWorker=String(a.workerId)===String(w.id);
-                var isTeam=workerTeamWid&&a.workerId===workerTeamWid;
-                return (isWorker||isTeam)&&
+                return String(a.workerId)===String(w.id)&&
                   pd(a.start).getTime()<=taskEnd&&pd(a.end).getTime()>=taskStart;
               });
               // בדוק התאמה — רק כשיש projGlobalId
@@ -1352,9 +1347,8 @@ function render(){
               if(hasMismatch){
                 overlappingAssignments.forEach(function(oa){
                   var oaProj=D.projects.find(function(gp){return gp.id===oa.projectId;});
-                  // mismatch אם: אין globalId לפרויקט השיבוץ, או שה-globalId לא תואם
-                  var isMatch=oaProj&&oaProj.globalId&&projGlobalId&&oaProj.globalId===projGlobalId;
-                  if(isMatch) return; // תואם — אין צורך בהתראה
+                  var isMM=!oaProj||!oaProj.globalId||!projGlobalId||oaProj.globalId!==projGlobalId;
+                  if(!isMM) return;
                   _tpMismatches.push({
                     wid:w.id,
                     aid:oa.id,
@@ -3927,42 +3921,85 @@ function buildTPPanel(){
 
 // Call this from render() to draw overlays after rows are built
 function renderTPOverlays(){
-  // נקה ⚠️ ישנים
+  // נקה סימונים ישנים
   document.querySelectorAll('.blk[data-tp-warn]').forEach(function(blk){
     var t=blk.querySelector('.btitle');
     if(t) t.textContent=t.textContent.replace(/^⚠️ /,'');
     delete blk.dataset.tpWarn;
     delete blk._tpTipHtml;
   });
-  if(!_tpMismatches||!_tpMismatches.length) return;
-  _tpMismatches.forEach(function(mm){
-    var aBlk=document.querySelector('.blk[data-aid="'+mm.aid+'"]');
-    if(!aBlk) return;
-    // דלג על העדרויות בלבד
-    if(aBlk.dataset.absence) return;
-    // אם כבר סומן — רק עדכן tooltip (אולי יש מספר משימות על אותו בלוק)
-    var title=aBlk.querySelector('.btitle');
-    if(!title) return;
-    if(!aBlk.dataset.tpWarn){
-      aBlk.dataset.tpWarn='1';
-      title.textContent='⚠️ '+title.textContent;
-    }
-    // tooltip — הוסף משימה לרשימה
-    var tipHtml=
-      '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">⚠️ אי-התאמה</div>'+
-      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">משימה: <span style="color:#fff;">'+mm.taskName+'</span></div>'+
-      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">תוכנית: <span style="color:#fff;">'+mm.projName+'</span></div>'+
-      '<div style="font-size:10px;color:#aac4e0;">'+mm.start+' → '+mm.end+'</div>';
-    aBlk._tpTipHtml=tipHtml;
-  });
-  // הוסף mouseenter לכל הבלוקים המסומנים
-  document.querySelectorAll('.blk[data-tp-warn]').forEach(function(blk){
-    blk.addEventListener('mouseenter',function(e){
-      if(blk._tpTipHtml) showBlkTooltip(e,blk._tpTipHtml);
+  if(!_tpActive||_tpActive.size===0) return;
+
+  var projects=getTPProjects().filter(function(p){return _tpActive.has(p.key);});
+  if(!projects.length) return;
+
+  // לכל פרויקט תוכנית פעיל
+  projects.forEach(function(proj){
+    var projGlobalId;
+    try{
+      var raw=localStorage.getItem(proj.key);
+      if(raw){var pm=JSON.parse(raw);projGlobalId=pm&&pm.meta?pm.meta.globalId:undefined;}
+    }catch(e){}
+    if(!projGlobalId) return; // אין ID לתוכנית — לא יכולים לבדוק
+
+    var planWorkers=proj.data.workers||[];
+    var planTasks=proj.data.tasks||[];
+
+    // לכל עובד בשיבוץ שיש לו globalId
+    D.workers.forEach(function(w){
+      if(!w.globalId) return;
+      // מצא את העובד המתאים בתוכנית
+      var planWorker=planWorkers.find(function(pw){return pw.globalId===w.globalId;});
+      if(!planWorker) return;
+
+      // המשימות של עובד זה בתוכנית
+      var tasks=planTasks.filter(function(t){return +t.wid===+planWorker.id;});
+
+      tasks.forEach(function(task){
+        var taskStart=pd(task.start).getTime();
+        var taskEnd=pd(task.end).getTime();
+
+        // מצא assignments חופפים — של העובד ישירות
+        var overlapping=D.assignments.filter(function(a){
+          if(a.absence) return false;
+          var wMatch=String(a.workerId)===String(w.id);
+          return wMatch &&
+            pd(a.start).getTime()<=taskEnd &&
+            pd(a.end).getTime()>=taskStart;
+        });
+
+        // בדוק כל assignment — אם ה-globalId שלו לא תואם לפרויקט התוכנית
+        overlapping.forEach(function(a){
+          var ganttProj=D.projects.find(function(gp){return gp.id===a.projectId;});
+          // mismatch: פרויקט השיבוץ לא תואם לפרויקט התוכנית
+          var isMatch=ganttProj&&ganttProj.globalId&&ganttProj.globalId===projGlobalId;
+          if(isMatch) return;
+
+          // מצא את הבלוק ב-DOM
+          var aBlk=document.querySelector('.blk[data-aid="'+a.id+'"]');
+          if(!aBlk||aBlk.dataset.absence) return;
+          var title=aBlk.querySelector('.btitle');
+          if(!title) return;
+
+          // סמן בלוק
+          if(!aBlk.dataset.tpWarn){
+            aBlk.dataset.tpWarn='1';
+            title.textContent='⚠️ '+title.textContent;
+            var tipHtml=
+              '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">⚠️ אי-התאמה</div>'+
+              '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">משימה: <span style="color:#fff;">'+task.name+'</span></div>'+
+              '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">תוכנית: <span style="color:#fff;">'+proj.name+'</span></div>'+
+              '<div style="font-size:10px;color:#aac4e0;">'+task.start+' → '+task.end+'</div>';
+            aBlk._tpTipHtml=tipHtml;
+            aBlk.addEventListener('mouseenter',function(e){
+              if(aBlk._tpTipHtml) showBlkTooltip(e,aBlk._tpTipHtml);
+            });
+          }
+        });
+      });
     });
   });
 }
-
 
 
 window.toggleTPPanel = toggleTPPanel;
