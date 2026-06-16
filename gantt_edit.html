@@ -1300,8 +1300,8 @@ function render(){
           _tc.style.cssText='width:'+WW_+'px;height:22px;border-right:1px solid #e0deda;flex-shrink:0;box-sizing:border-box;';
           tpRow.appendChild(_tc);
         }
-        if(w.globalId){
-          var _tpProjs=getTPProjects().filter(function(p){return _tpActive.has(p.key);});
+        var _tpProjs=getTPProjects().filter(function(p){return _tpActive.has(p.key);});
+        if(w.globalId&&_tpProjs.length){
           _tpProjs.forEach(function(proj){
             var projGlobalId;
             try{var _raw=localStorage.getItem(proj.key);if(_raw){var _pm=JSON.parse(_raw);projGlobalId=_pm&&_pm.meta?_pm.meta.globalId:undefined;}}catch(e){}
@@ -1321,9 +1321,12 @@ function render(){
               // בדוק התאמה: האם הפרויקט בשיבוץ שהעובד משובץ אליו בטווח זה תואם לפרויקט התוכנית?
               var taskStart=pd(task.start).getTime();
               var taskEnd=pd(task.end).getTime();
-              // מצא assignments של העובד שחופפים לטווח המשימה
+              // מצא assignments של העובד שחופפים לטווח המשימה — כולל assignments של הצוות שלו
+              var workerTeamWid=w.team?'team_'+w.team:null;
               var overlappingAssignments=D.assignments.filter(function(a){
-                return String(a.workerId)===String(w.id)&&
+                var isWorker=String(a.workerId)===String(w.id);
+                var isTeam=workerTeamWid&&a.workerId===workerTeamWid;
+                return (isWorker||isTeam)&&
                   pd(a.start).getTime()<=taskEnd&&pd(a.end).getTime()>=taskStart;
               });
               // בדוק התאמה — רק כשיש projGlobalId
@@ -1348,8 +1351,9 @@ function render(){
               if(hasMismatch){
                 overlappingAssignments.forEach(function(oa){
                   var oaProj=D.projects.find(function(gp){return gp.id===oa.projectId;});
-                  var isMM=!oaProj||!oaProj.globalId||!projGlobalId||oaProj.globalId!==projGlobalId;
-                  if(!isMM) return;
+                  // mismatch אם: אין globalId לפרויקט השיבוץ, או שה-globalId לא תואם
+                  var isMatch=oaProj&&oaProj.globalId&&projGlobalId&&oaProj.globalId===projGlobalId;
+                  if(isMatch) return; // תואם — אין צורך בהתראה
                   _tpMismatches.push({
                     wid:w.id,
                     aid:oa.id,
