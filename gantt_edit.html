@@ -3927,8 +3927,8 @@ function renderTPOverlays(){
     // מצא את בלוק השיבוץ לפי data-aid
     var aBlk=document.querySelector('.blk[data-aid="'+mm.aid+'"]');
     if(!aBlk) return;
-    // אל תוסיף כפול
     if(aBlk.querySelector('.tp-warn')) return;
+    aBlk.style.overflow='visible'; // מאפשר ל-⚠️ sticky להיות גלוי
     var tipHtml=
       '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">⚠️ אי-התאמה</div>'+
       '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">משימה: <span style="color:#fff;">'+mm.taskName+'</span></div>'+
@@ -3936,18 +3936,12 @@ function renderTPOverlays(){
       '<div style="font-size:10px;color:#aac4e0;">'+mm.start+' → '+mm.end+'</div>';
     var warnEl=document.createElement('div');
     warnEl.className='tp-warn';
-    warnEl.style.cssText='font-size:12px;line-height:1;pointer-events:auto;cursor:default;flex-shrink:0;';
+    warnEl.style.cssText='position:sticky;left:6px;font-size:12px;line-height:1;pointer-events:auto;cursor:default;flex-shrink:0;z-index:15;';
     warnEl.textContent='⚠️';
     warnEl.addEventListener('mouseenter',function(e){e.stopPropagation();showBlkTooltip(e,tipHtml);});
     warnEl.addEventListener('mousemove',function(e){posTooltip(e);});
     warnEl.addEventListener('mouseleave',function(){hideBlkTooltip();});
-    // הכנס לתוך blk-content (sticky) — ממש לשמאל שם הפרויקט
-    var blkContent=aBlk.querySelector('.blk-content');
-    if(blkContent){
-      blkContent.appendChild(warnEl);
-    } else {
-      aBlk.appendChild(warnEl);
-    }
+    aBlk.appendChild(warnEl);
   });
 }
 
