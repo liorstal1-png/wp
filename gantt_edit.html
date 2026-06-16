@@ -3921,34 +3921,30 @@ function buildTPPanel(){
 
 // Call this from render() to draw overlays after rows are built
 function renderTPOverlays(){
-  document.querySelectorAll('.tp-warn').forEach(function(el){el.remove();});
+  // נקה ⚠️ ישנים מ-btitle
+  document.querySelectorAll('.btitle[data-tp-warn]').forEach(function(el){
+    el.textContent=el.textContent.replace(/^⚠️ /,'');
+    delete el.dataset.tpWarn;
+  });
   if(!_tpMismatches||!_tpMismatches.length) return;
   _tpMismatches.forEach(function(mm){
     var aBlk=document.querySelector('.blk[data-aid="'+mm.aid+'"]');
     if(!aBlk) return;
-    var tlRow=aBlk.closest('.tlrow');
-    if(!tlRow) return;
-    if(tlRow.querySelector('.tp-warn[data-mmid="'+mm.aid+'"]')) return;
+    var title=aBlk.querySelector('.btitle');
+    if(!title||title.dataset.tpWarn) return;
+    title.dataset.tpWarn='1';
+    // הוסף ⚠️ לפני שם הפרויקט
+    title.textContent='⚠️ '+title.textContent;
+    // tooltip מותאם בhover על הבלוק
     var tipHtml=
-      '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">\u26a0\ufe0f \u05d0\u05d9-\u05d4\u05ea\u05d0\u05de\u05d4</div>'+
-      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">\u05de\u05e9\u05d9\u05de\u05d4: <span style="color:#fff;">'+mm.taskName+'</span></div>'+
-      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">\u05ea\u05d5\u05db\u05e0\u05d9\u05ea: <span style="color:#fff;">'+mm.projName+'</span></div>'+
-      '<div style="font-size:10px;color:#aac4e0;">'+mm.start+' \u2192 '+mm.end+'</div>';
-    // חשב מיקום: left = blk.left, top מרכז הbלוק
-    var blkLeft=parseFloat(aBlk.style.left)||0;
-    var blkW=parseFloat(aBlk.style.width)||80;
-    var warnEl=document.createElement('div');
-    warnEl.className='tp-warn';
-    warnEl.dataset.mmid=mm.aid;
-    // position:absolute ב-tlrow — בקצה שמאלי של הבלוק
-    warnEl.style.cssText='position:absolute;top:4px;left:'+(blkLeft+blkW-20)+'px;font-size:13px;line-height:1;z-index:20;pointer-events:auto;cursor:default;';
-    warnEl.textContent='\u26a0\ufe0f';
-    warnEl.addEventListener('mouseenter',function(e){e.stopPropagation();showBlkTooltip(e,tipHtml);});
-    warnEl.addEventListener('mousemove',function(e){posTooltip(e);});
-    warnEl.addEventListener('mouseleave',function(){hideBlkTooltip();});
-    tlRow.appendChild(warnEl);
+      '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">⚠️ אי-התאמה</div>'+
+      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">משימה: <span style="color:#fff;">'+mm.taskName+'</span></div>'+
+      '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">תוכנית: <span style="color:#fff;">'+mm.projName+'</span></div>'+
+      '<div style="font-size:10px;color:#aac4e0;">'+mm.start+' → '+mm.end+'</div>';
+    aBlk.addEventListener('mouseenter',function(e){showBlkTooltip(e,tipHtml);},{once:false,capture:false});
   });
 }
+
 
 window.toggleTPPanel = toggleTPPanel;
 
