@@ -1344,30 +1344,6 @@ function render(){
               _tl.textContent=task.name;
               _tb.appendChild(_tl);
               tpRow.appendChild(_tb);
-              // אם יש אי-התאמה — הוסף ⚠️ על בלוק השיבוץ החופף
-              if(hasMismatch){
-                var taskStart=pd(task.start).getTime();
-                var taskEnd=pd(task.end).getTime();
-                overlappingAssignments.forEach(function(a){
-                  // מצא את בלוק השיבוץ ב-DOM לפי data-aid
-                  var aBlk=document.querySelector('.blk[data-aid="'+a.id+'"]');
-                  if(aBlk&&!aBlk.querySelector('.tp-warn')){
-                    var warn=document.createElement('div');
-                    warn.className='tp-warn';
-                    warn.style.cssText='position:absolute;top:2px;left:4px;font-size:13px;line-height:1;z-index:20;cursor:default;pointer-events:auto;';
-                    warn.textContent='⚠️';
-                    var planProjName=proj.name||'תוכנית עבודה';
-                    var ganttProjName=D.projects.find(function(gp){return gp.id===a.projectId;});
-                    ganttProjName=ganttProjName?ganttProjName.name:'לא ידוע';
-                    warn.title='⚠️ אי-התאמה בין שיבוץ לתוכנית עבודה\nמשימה: '+task.name+'\nתוכנית: '+planProjName+'\nשיבוץ: '+ganttProjName+'\nתאריכים: '+task.start+' → '+task.end;
-                    aBlk.appendChild(warn);
-                  }
-                });
-              }
-              _tb.title=(hasMismatch?'⚠️ הפרויקט בשיבוץ לא תואם לתוכנית העבודה\n':'')+task.name+'\n'+task.start+' → '+task.end;
-              var _tl=document.createElement('div');
-              _tl.style.cssText='font-size:9px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:16px;direction:rtl;';
-              _tl.textContent=task.name;
               _tb.appendChild(_tl);
               tpRow.appendChild(_tb);
             });
@@ -3930,7 +3906,65 @@ function buildTPPanel(){
 }
 
 // Call this from render() to draw overlays after rows are built
-function renderTPOverlays(){}
+function renderTPOverlays(){
+  if(!_tpActive||_tpActive.size===0) return;
+  // נקה ⚠️ ישנים
+  document.querySelectorAll('.tp-warn').forEach(function(el){el.remove();});
+
+  var projects=getTPProjects().filter(function(p){return _tpActive.has(p.key);});
+  if(!projects.length) return;
+
+  projects.forEach(function(proj){
+    var projGlobalId;
+    try{var _raw=localStorage.getItem(proj.key);if(_raw){var _pm=JSON.parse(_raw);projGlobalId=_pm&&_pm.meta?_pm.meta.globalId:undefined;}}catch(e){}
+    var planWorkers=proj.data.workers||[];
+    var planTasks=proj.data.tasks||[];
+
+    planTasks.forEach(function(task){
+      var planWorker=planWorkers.find(function(pw){return +pw.id===+task.wid;});
+      if(!planWorker||!planWorker.globalId) return;
+      var ganttWorker=D.workers.find(function(w){return w.globalId&&w.globalId===planWorker.globalId;});
+      if(!ganttWorker) return;
+
+      var taskStart=pd(task.start).getTime();
+      var taskEnd=pd(task.end).getTime();
+
+      // מצא assignments של העובד שחופפים לטווח המשימה
+      var overlapping=D.assignments.filter(function(a){
+        return String(a.workerId)===String(ganttWorker.id)&&
+          pd(a.start).getTime()<=taskEnd&&pd(a.end).getTime()>=taskStart;
+      });
+      if(!overlapping.length) return;
+
+      // בדוק אם ה-assignments תואמים לפרויקט התוכנית
+      var hasMismatch=overlapping.some(function(a){
+        var ganttProj=D.projects.find(function(gp){return gp.id===a.projectId;});
+        if(!ganttProj||!ganttProj.globalId||!projGlobalId) return true; // אין ID — mismatch
+        return ganttProj.globalId!==projGlobalId;
+      });
+
+      if(!hasMismatch) return;
+
+      // הוסף ⚠️ על כל בלוק שיבוץ חופף שלא תואם
+      overlapping.forEach(function(a){
+        var ganttProj=D.projects.find(function(gp){return gp.id===a.projectId;});
+        var isMismatch=!ganttProj||!ganttProj.globalId||!projGlobalId||ganttProj.globalId!==projGlobalId;
+        if(!isMismatch) return;
+        var aBlk=document.querySelector('.blk[data-aid="'+a.id+'"]');
+        if(!aBlk||aBlk.querySelector('.tp-warn')) return;
+        var warn=document.createElement('div');
+        warn.className='tp-warn';
+        warn.style.cssText='position:absolute;top:2px;right:4px;font-size:14px;line-height:1;z-index:20;pointer-events:auto;cursor:default;';
+        warn.textContent='⚠️';
+        var planProjName=proj.name||'תוכנית עבודה';
+        var ganttProjName=ganttProj?ganttProj.name:'לא מוגדר';
+        warn.title='אי-התאמה בין שיבוץ לתוכנית עבודה\n\nמשימה: '+task.name+'\nפרויקט תוכנית: '+planProjName+'\nפרויקט שיבוץ: '+ganttProjName+'\nתאריכים: '+task.start+' → '+task.end;
+        aBlk.style.position='relative';
+        aBlk.appendChild(warn);
+      });
+    });
+  });
+}
 
 window.toggleTPPanel = toggleTPPanel;
 
