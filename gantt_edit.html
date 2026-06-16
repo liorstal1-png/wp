@@ -3952,18 +3952,20 @@ function renderTPOverlays(){
         if(!isMismatch) return;
         var aBlk=document.querySelector('.blk[data-aid="'+a.id+'"]');
         if(!aBlk||aBlk.querySelector('.tp-warn')) return;
-        // הוסף tooltip על הבלוק בלבד — ללא שינוי DOM שלו
         var planProjName=proj.name||'תוכנית עבודה';
         var ganttProjName=ganttProj?ganttProj.name:'לא מוגדר';
-        aBlk.title='⚠️ אי-התאמה\nמשימה: '+task.name+'\nתוכנית: '+planProjName+'\nשיבוץ: '+ganttProjName+'\nתאריכים: '+task.start+' → '+task.end;
-        // ⚠️ ממוקם על ידי getBoundingClientRect — fixed מעל הבלוק
+        var tipHtml=
+          '<div style="font-weight:700;font-size:11px;margin-bottom:3px;color:#FFD966;">⚠️ אי-התאמה</div>'+
+          '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">משימה: <span style="color:#fff;">'+task.name+'</span></div>'+
+          '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">תוכנית: <span style="color:#fff;">'+planProjName+'</span></div>'+
+          '<div style="font-size:10px;color:#aac4e0;margin-bottom:2px;">שיבוץ: <span style="color:#fff;">'+ganttProjName+'</span></div>'+
+          '<div style="font-size:10px;color:#aac4e0;">'+task.start+' → '+task.end+'</div>';
         var warn=document.createElement('div');
         warn.className='tp-warn';
         warn.style.cssText='position:fixed;font-size:13px;line-height:1;z-index:200;pointer-events:none;';
         warn.textContent='⚠️';
         document.body.appendChild(warn);
-        // מיקום דינמי בהתאם למיקום הבלוק
-        (function(blk,w){
+        (function(blk,w,html){
           function posWarn(){
             var r=blk.getBoundingClientRect();
             if(r.width===0){w.remove();return;}
@@ -3971,10 +3973,13 @@ function renderTPOverlays(){
             w.style.top=(r.top+2)+'px';
           }
           posWarn();
-          // עדכן מיקום בגלילה
+          // tooltip בסגנון blk-tooltip בhover על הבלוק
+          blk.addEventListener('mouseenter',function(e){showBlkTooltip(e,html);});
+          blk.addEventListener('mousemove',posTooltip);
+          blk.addEventListener('mouseleave',hideBlkTooltip);
           var wrap=document.getElementById('wrap');
           if(wrap) wrap.addEventListener('scroll',posWarn,{passive:true});
-        })(aBlk,warn);
+        })(aBlk,warn,tipHtml);
       });
     });
   });
