@@ -46,6 +46,77 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .fld input[type=number]{direction:ltr;text-align:right;}
 .section-title{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--brd);}
 </style>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDOIwsCqDyivx8kdCUQHEVPTWFYFfB-yFw",
+      authDomain: "scheduling-a5647.firebaseapp.com",
+      projectId: "scheduling-a5647",
+      storageBucket: "scheduling-a5647.firebasestorage.app",
+      messagingSenderId: "1086458270592",
+      appId: "1:1086458270592:web:1dff903b00ed4e62426765"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ── Save project to Firebase ──
+    window._fbSaveProject = async function(id, projData) {
+      try {
+        await setDoc(doc(db, 'te_projects', id), { payload: JSON.stringify(projData) });
+      } catch(e) { console.error('FB save project error:', e); }
+    };
+
+    // ── Load all projects from Firebase ──
+    window._fbLoadAllProjects = async function() {
+      try {
+        const snap = await getDocs(collection(db, 'te_projects'));
+        var projects = {};
+        snap.forEach(function(d){ projects[d.id] = JSON.parse(d.data().payload); });
+        return projects;
+      } catch(e) { console.error('FB load projects error:', e); return null; }
+    };
+
+    // ── Delete project from Firebase ──
+    window._fbDeleteProject = async function(id) {
+      try {
+        const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+        await deleteDoc(doc(db, 'te_projects', id));
+      } catch(e) {}
+    };
+
+    // ── Save sprint config ──
+    window._fbSaveSprintConfig = async function(cfg) {
+      try {
+        await setDoc(doc(db, 'te_config', 'sprint'), { payload: JSON.stringify(cfg) });
+      } catch(e) {}
+    };
+
+    // ── Load sprint config ──
+    window._fbLoadSprintConfig = async function() {
+      try {
+        const snap = await getDoc(doc(db, 'te_config', 'sprint'));
+        if(snap.exists()) return JSON.parse(snap.data().payload);
+      } catch(e) {}
+      return null;
+    };
+
+    // ── Real-time listener — refresh grid when projects change ──
+    onSnapshot(collection(db, 'te_projects'), function(snap) {
+      // עדכן localStorage מFirebase ורנדר מחדש
+      snap.forEach(function(d) {
+        try {
+          var projData = JSON.parse(d.data().payload);
+          localStorage.setItem('te_proj_' + d.id, JSON.stringify(projData));
+        } catch(e) {}
+      });
+      if(typeof window.renderGrid === 'function') window.renderGrid();
+    });
+
+  </script>
 </head>
 <body>
 
@@ -174,15 +245,44 @@ function listProjects(){
 function loadProject(id){try{return JSON.parse(localStorage.getItem(PREFIX+id));}catch(e){return null;}}
 function saveProject(id,meta,data){
   meta.updatedAt=Date.now();
-  localStorage.setItem(PREFIX+id,JSON.stringify({meta:meta,data:data}));
+  var proj={meta:meta,data:data};
+  localStorage.setItem(PREFIX+id,JSON.stringify(proj));
+  if(window._fbSaveProject) window._fbSaveProject(id, proj);
 }
-function deleteProject(id){localStorage.removeItem(PREFIX+id);}
+function deleteProject(id){
+  localStorage.removeItem(PREFIX+id);
+  if(window._fbDeleteProject) window._fbDeleteProject(id);
+}
 
 function getSprintConfig(){
   try{var s=localStorage.getItem('te_sprint_config');if(s)return JSON.parse(s);}catch(e){}
   return {firstSprint:27,weeksPerSprint:3,startDate:null,hoursPerWeek:42};
 }
-function saveSprintConfig(cfg){localStorage.setItem('te_sprint_config',JSON.stringify(cfg));}
+function saveSprintConfig(cfg){
+  localStorage.setItem('te_sprint_config',JSON.stringify(cfg));
+  if(window._fbSaveSprintConfig) window._fbSaveSprintConfig(cfg);
+}
+
+// טעינה ראשונית מ-Firebase
+(async function(){
+  if(!window._fbLoadAllProjects) return; // Firebase לא נטען עדיין
+  // המתן ל-Firebase
+  var tries=0;
+  while(!window._fbLoadAllProjects&&tries<20){await new Promise(function(r){setTimeout(r,100);});tries++;}
+  if(!window._fbLoadAllProjects) return;
+  var projects=await window._fbLoadAllProjects();
+  if(projects){
+    Object.keys(projects).forEach(function(id){
+      localStorage.setItem(PREFIX+id,JSON.stringify(projects[id]));
+    });
+  }
+  // גם sprint config
+  if(window._fbLoadSprintConfig){
+    var sc=await window._fbLoadSprintConfig();
+    if(sc) localStorage.setItem('te_sprint_config',JSON.stringify(sc));
+  }
+  if(typeof window.renderGrid==='function') window.renderGrid();
+})();
 
 // ── Render home ────────────────────────────────────────────────────────────
 window.renderGrid=function renderGrid(){

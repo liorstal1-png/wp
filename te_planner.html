@@ -145,6 +145,70 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--txt);height
 .cpop{position:fixed;background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);z-index:500;padding:8px;display:none;flex-wrap:wrap;gap:5px;width:124px;box-shadow:0 4px 16px rgba(0,0,0,.12);}
 
 </style>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDOIwsCqDyivx8kdCUQHEVPTWFYFfB-yFw",
+      authDomain: "scheduling-a5647.firebaseapp.com",
+      projectId: "scheduling-a5647",
+      storageBucket: "scheduling-a5647.firebasestorage.app",
+      messagingSenderId: "1086458270592",
+      appId: "1:1086458270592:web:1dff903b00ed4e62426765"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ── Save project data ──
+    var _fbSaveTimer = null;
+    window._fbSavePlanner = function(pid, projData) {
+      clearTimeout(_fbSaveTimer);
+      _fbSaveTimer = setTimeout(async function(){
+        try {
+          await setDoc(doc(db, 'te_projects', pid), { payload: JSON.stringify(projData) });
+        } catch(e) { console.error('FB planner save error:', e); }
+      }, 1000);
+    };
+
+    // ── Load project data ──
+    window._fbLoadPlanner = async function(pid) {
+      try {
+        const snap = await getDoc(doc(db, 'te_projects', pid));
+        if(snap.exists()) return JSON.parse(snap.data().payload);
+      } catch(e) { console.error('FB planner load error:', e); }
+      return null;
+    };
+
+    // ── Load sprint config ──
+    window._fbLoadSprintConfig = async function() {
+      try {
+        const snap = await getDoc(doc(db, 'te_config', 'sprint'));
+        if(snap.exists()) return JSON.parse(snap.data().payload);
+      } catch(e) {}
+      return null;
+    };
+
+    // ── Real-time listener — sync כשמשתמש אחר שינה ──
+    window._fbStartPlannerSync = function(pid) {
+      onSnapshot(doc(db, 'te_projects', pid), function(snap) {
+        if(!snap.exists()) return;
+        try {
+          var remote = JSON.parse(snap.data().payload);
+          // עדכן localStorage
+          localStorage.setItem('te_proj_' + pid, JSON.stringify(remote));
+          // עדכן sessionStorage ורנדר רק אם D שונה
+          if(JSON.stringify(window._teD) !== JSON.stringify(remote.data)) {
+            window._teD = remote.data;
+            if(typeof window._tePlannerLoad === 'function') window._tePlannerLoad(remote);
+          }
+        } catch(e) {}
+      });
+    };
+
+  </script>
 </head>
 <body>
 <div class="topbar">
@@ -441,6 +505,8 @@ function saveData(){
         p.data=D;
         p.meta.updatedAt=Date.now();
         localStorage.setItem(pkey,JSON.stringify(p));
+        // שמור גם ב-Firebase
+        if(window._fbSavePlanner) window._fbSavePlanner(pid, p);
       }
     }
   }catch(e){}
@@ -1919,6 +1985,48 @@ document.getElementById('modeBtn').textContent=MODE_WEEKS?'📅 תאריכים':
 
 render();
 setTimeout(function(){document.getElementById('tlwrap').scrollLeft=0;},100);
+
+// ── Firebase sync ──────────────────────────────────────────────────────────
+(function(){
+  var pid=sessionStorage.getItem('te_active_pid');
+  if(!pid) return;
+  // המתן ל-Firebase functions
+  var tries=0;
+  var interval=setInterval(async function(){
+    tries++;
+    if(tries>30){clearInterval(interval);return;}
+    if(!window._fbLoadPlanner||!window._fbStartPlannerSync) return;
+    clearInterval(interval);
+    // טעינה ראשונית מ-Firebase אם localStorage ריק/ישן
+    var fbData=await window._fbLoadPlanner(pid);
+    if(fbData&&fbData.data){
+      var localRaw=localStorage.getItem('te_proj_'+pid);
+      var localProj=localRaw?JSON.parse(localRaw):null;
+      // השתמש ב-Firebase אם עדכני יותר
+      if(!localProj||!localProj.meta||fbData.meta.updatedAt>localProj.meta.updatedAt){
+        localStorage.setItem('te_proj_'+pid,JSON.stringify(fbData));
+        // עדכן D ישירות
+        D=fbData.data;
+        var sd={D:D,ZL:ZL,TL_WEEKS:TL_WEEKS,TL_START:fd(TL_START),collapsed:collapsed,MODE_WEEKS:MODE_WEEKS};
+        sessionStorage.setItem(SK,JSON.stringify(sd));
+        render();
+        toast('🔄 נטען מהענן');
+      }
+    }
+    // הפעל real-time sync
+    window._fbStartPlannerSync(pid);
+    // __ tePlannerLoad — נקרא מ-onSnapshot כשמשתמש אחר שינה
+    window._tePlannerLoad=function(remote){
+      if(!remote||!remote.data) return;
+      D=remote.data;
+      var sd={D:D,ZL:ZL,TL_WEEKS:TL_WEEKS,TL_START:fd(TL_START),collapsed:collapsed,MODE_WEEKS:MODE_WEEKS};
+      sessionStorage.setItem(SK,JSON.stringify(sd));
+      render();
+      toast('🔄 עודכן על ידי משתמש אחר');
+    };
+    window._teD=D;
+  },100);
+})();
 
 // ── TOOLTIP ──────────────────────────────────────────────────────────────
 var _ttTimer=null;
